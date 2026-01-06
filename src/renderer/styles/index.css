@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全局样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+}
+
+/* 可拖拽区域 */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* 圆环进度条动画 */
+@keyframes progress-appear {
+  from {
+    stroke-dashoffset: 283;
+  }
+}
+
+.quota-ring {
+  animation: progress-appear 0.5s ease-out;
+}
+
+/* 悬浮窗样式 - 扁平小组件风格 */
+.widget-container {
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  background: rgba(17, 24, 39, 0.95);  /* 稍微提高不透明度，修复拖拽首次失灵 */
+  border-radius: 12px;
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-app-region: drag;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.widget-item {
+  -webkit-app-region: no-drag;
+}
+
+/* 悬浮窗悬停效果 */
+.widget-container:hover {
+  border-color: rgba(75, 85, 99, 0.5);
+}

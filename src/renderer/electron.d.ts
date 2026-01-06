@@ -1,0 +1,103 @@
+/**
+ * Electron API 类型声明
+ * 定义 window.electronAPI 的类型
+ */
+
+// 账户信息类型
+interface AccountInfo {
+  id: string;
+  email: string;
+  name?: string;
+  picture?: string;
+}
+
+// 认证状态类型
+interface AuthStateInfo {
+  state: string;
+  error?: string;
+  activeAccount?: AccountInfo;
+}
+
+// 配额快照类型
+interface QuotaSnapshot {
+  timestamp: string;
+  models: Array<{
+    modelId: string;
+    displayName: string;
+    alias?: string;
+    remainingFraction: number;
+    remainingPercentage: number;
+    isExhausted: boolean;
+    resetTime: string;
+  }>;
+  userEmail?: string;
+  tier?: string;
+}
+
+// 模型信息类型
+interface ModelInfo {
+  modelId: string;
+  displayName: string;
+}
+
+// 模型配置类型
+interface ModelConfig {
+  visible: boolean;
+  alias: string;
+  order: number;
+}
+
+// 应用设置类型
+interface AppSettings {
+  pollingInterval: number;
+  warningThreshold: number;
+  criticalThreshold: number;
+  autoStart: boolean;
+  notifications: boolean;
+  showWidget: boolean;
+  language: 'auto' | 'zh-CN' | 'en';
+}
+
+declare global {
+  interface Window {
+    electronAPI: {
+      // 应用信息
+      getAppVersion: () => Promise<string>;
+
+      // 窗口控制
+      minimizeWindow: () => void;
+      closeWindow: () => void;
+
+      // 配额相关
+      getQuota: () => Promise<QuotaSnapshot | null>;
+      getAccountQuota: (accountId: string) => Promise<QuotaSnapshot | undefined>;
+      getAllQuotas: () => Promise<Record<string, QuotaSnapshot>>;
+      refreshQuota: () => Promise<QuotaSnapshot | null>;
+      setPollingInterval: (intervalMs: number) => Promise<void>;
+      startPolling: () => Promise<void>;
+      stopPolling: () => Promise<void>;
+      getAvailableModels: () => Promise<ModelInfo[]>;
+      onQuotaUpdate: (callback: (data: { accountId: string; snapshot: QuotaSnapshot }) => void) => void;
+      onQuotaError: (callback: (data: { accountId: string; error: string }) => void) => void;
+      onQuotaStatus: (callback: (data: { status: string; retryCount?: number }) => void) => void;
+      onSettingsUpdate: (callback: (data: { settings: AppSettings; modelConfigs: Record<string, ModelConfig> }) => void) => void;
+
+      // 设置相关
+      getSettings: () => Promise<{ settings: AppSettings; modelConfigs: Record<string, ModelConfig> }>;
+      saveSettings: (settings: { settings: AppSettings; modelConfigs: Record<string, ModelConfig> }) => Promise<void>;
+      getModelConfigs: () => Promise<Record<string, ModelConfig>>;
+      saveModelConfigs: (configs: Record<string, ModelConfig>) => Promise<void>;
+      setAutoStart: (enabled: boolean) => Promise<void>;
+
+      // 认证相关
+      login: () => Promise<boolean>;
+      logout: (accountId?: string) => Promise<void>;
+      getAccounts: () => Promise<AccountInfo[]>;
+      getActiveAccount: () => Promise<AccountInfo | null>;
+      setActiveAccount: (accountId: string) => Promise<void>;
+      getAuthState: () => Promise<AuthStateInfo>;
+    };
+  }
+}
+
+export { };

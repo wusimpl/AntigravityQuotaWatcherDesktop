@@ -1,0 +1,455 @@
+/**
+ * Google OAuth 2.0 认证服务
+ * 管理 Google 账号登录、Token 刷新和认证状态
+ */
+import { shell } from 'electron';
+import * as https from 'https';
+import * as crypto from 'crypto';
+import { exec } from 'child_process';
+import {
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GOOGLE_AUTH_ENDPOINT,
+  GOOGLE_TOKEN_ENDPOINT,
+  GOOGLE_SCOPES,
+} from './constants';
+import { TokenStorage, TokenData, AccountData } from './tokenStorage';
+import { CallbackServer } from './callbackServer';
+
+export enum AuthState {
+  NOT_AUTHENTICATED = 'not_authenticated',
+  AUTHENTICATING = 'authenticating',
+  AUTHENTICATED = 'authenticated',
+  TOKEN_EXPIRED = 'token_expired',
+  REFRESHING = 'refreshing',
+  ERROR = 'error',
+}
+
+export interface AuthStateInfo {
+  state: AuthState;
+  error?: string;
+  activeAccount?: AccountData;
+}
+
+interface TokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+  token_type: string;
+  scope: string;
+}
+
+interface UserInfoResponse {
+  id: string;
+  email: string;
+  verified_email: boolean;
+  name?: string;
+  picture?: string;
+}
+
+export class GoogleAuthService {
+  private static instance: GoogleAuthService;
+  private tokenStorage: TokenStorage;
+  private callbackServer: CallbackServer | null = null;
+  private currentState: AuthState = AuthState.NOT_AUTHENTICATED;
+  private lastError: string | undefined;
+  private stateChangeListeners: Set<(state: AuthStateInfo) => void> = new Set();
+
+  private constructor() {
+    this.tokenStorage = TokenStorage.getInstance();
+  }
+
+  static getInstance(): GoogleAuthService {
+    if (!GoogleAuthService.instance) {
+      GoogleAuthService.instance = new GoogleAuthService();
+    }
+    return GoogleAuthService.instance;
+  }
+
+  /**
+   * 初始化服务
+   */
+  async initialize(): Promise<void> {
+    console.log('[GoogleAuth] Initializing...');
+    const hasAccount = await this.tokenStorage.hasAnyAccount();
+
+    if (hasAccount) {
+      const activeId = this.tokenStorage.getActiveAccountId();
+      if (activeId) {
+        const isExpired = await this.tokenStorage.isTokenExpired(activeId);
+        if (isExpired) {
+          try {
+            await this.refreshToken(activeId);
+          } catch (e) {
+            console.warn('[GoogleAuth] Token refresh failed during init:', e);
+          }
+        }
+      }
+      this.setState(AuthState.AUTHENTICATED);
+    } else {
+      this.setState(AuthState.NOT_AUTHENTICATED);
+    }
+  }
+
+  isAuthenticated(): boolean {
+    return this.currentState === AuthState.AUTHENTICATED;
+  }
+
+  getAuthState(): AuthStateInfo {
+    return {
+      state: this.currentState,
+      error: this.lastError,
+    };
+  }
+
+  /**
+   * 发起 Google 登录流程
+   */
+  async login(): Promise<boolean> {
+    console.log('[GoogleAuth] Login initiated');
+
+    if (this.currentState === AuthState.AUTHENTICATING) {
+      console.log('[GoogleAuth] Already authenticating, skipping');
+      return false;
+    }
+
+    try {
+      this.setState(AuthState.AUTHENTICATING);
+
+      // 生成 PKCE 和 state
+      const state = crypto.randomBytes(32).toString('hex');
+      const codeVerifier = crypto.randomBytes(32).toString('base64url');
+      const codeChallenge = crypto
+        .createHash('sha256')
+        .update(codeVerifier)
+        .digest('base64url');
+
+      // 启动回调服务器
+      this.callbackServer = new CallbackServer();
+      await this.callbackServer.startServer();
+      const redirectUri = this.callbackServer.getRedirectUri();
+      console.log('[GoogleAuth] Callback server started, redirect URI:', redirectUri);
+
+      // 构建授权 URL
+      const authUrl = this.buildAuthUrl(redirectUri, state, codeChallenge);
+      console.log('[GoogleAuth] Auth URL built, opening browser...');
+
+      // 开始等待回调
+      const callbackPromise = this.callbackServer.waitForCallback(state);
+
+      // 打开浏览器
+      try {
+        await shell.openExternal(authUrl);
+        console.log('[GoogleAuth] Browser opened successfully');
+      } catch (shellError) {
+        console.error('[GoogleAuth] shell.openExternal failed, trying fallback:', shellError);
+        // Windows 备选方案
+        if (process.platform === 'win32') {
+          exec(`start "" "${authUrl}"`);
+          console.log('[GoogleAuth] Browser opened via exec fallback');
+        } else {
+          throw new Error(`Failed to open browser: ${shellError}`);
+        }
+      }
+
+      // 等待回调
+      const result = await callbackPromise;
+      console.log('[GoogleAuth] Received authorization code');
+
+      // 交换 Token
+      const tokenData = await this.exchangeCodeForToken(
+        result.code,
+        redirectUri,
+        codeVerifier
+      );
+
+      // 获取用户信息
+      const userInfo = await this.fetchUserInfo(tokenData.accessToken);
+
+      // 保存账户和 Token
+      const account: AccountData = {
+        id: userInfo.id,
+        email: userInfo.email,
+        name: userInfo.name,
+        picture: userInfo.picture,
+      };
+
+      await this.tokenStorage.saveAccount(account);
+      await this.tokenStorage.saveToken(account.id, tokenData);
+      this.tokenStorage.setActiveAccountId(account.id);
+
+      this.setState(AuthState.AUTHENTICATED);
+      console.log('[GoogleAuth] Login successful:', userInfo.email);
+      return true;
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      console.error('[GoogleAuth] Login failed:', errorMessage);
+      this.lastError = errorMessage;
+      this.setState(AuthState.ERROR);
+      return false;
+    } finally {
+      if (this.callbackServer) {
+        this.callbackServer.stop();
+        this.callbackServer = null;
+      }
+    }
+  }
+
+  /**
+   * 登出指定账户
+   */
+  async logout(accountId?: string): Promise<void> {
+    const targetId = accountId || this.tokenStorage.getActiveAccountId();
+    if (targetId) {
+      await this.tokenStorage.deleteAccount(targetId);
+    }
+
+    const accounts = await this.tokenStorage.getAccounts();
+    if (accounts.length === 0) {
+      this.setState(AuthState.NOT_AUTHENTICATED);
+    }
+  }
+
+  /**
+   * 获取有效的 Access Token
+   */
+  async getValidAccessToken(accountId?: string): Promise<string> {
+    const targetId = accountId || this.tokenStorage.getActiveAccountId();
+    if (!targetId) {
+      throw new Error('No active account');
+    }
+
+    const token = await this.tokenStorage.getToken(targetId);
+    if (!token) {
+      this.setState(AuthState.NOT_AUTHENTICATED);
+      throw new Error('Not authenticated');
+    }
+
+    const isExpired = await this.tokenStorage.isTokenExpired(targetId);
+    if (isExpired) {
+      await this.refreshToken(targetId);
+    }
+
+    const updatedToken = await this.tokenStorage.getToken(targetId);
+    if (!updatedToken) {
+      throw new Error('Failed to get access token');
+    }
+
+    return updatedToken.accessToken;
+  }
+
+  /**
+   * 获取所有账户
+   */
+  async getAccounts(): Promise<AccountData[]> {
+    return this.tokenStorage.getAccounts();
+  }
+
+  /**
+   * 获取活跃账户
+   */
+  async getActiveAccount(): Promise<AccountData | null> {
+    const activeId = this.tokenStorage.getActiveAccountId();
+    if (!activeId) return null;
+
+    const accounts = await this.tokenStorage.getAccounts();
+    return accounts.find(a => a.id === activeId) || null;
+  }
+
+  /**
+   * 切换活跃账户
+   */
+  setActiveAccount(accountId: string): void {
+    this.tokenStorage.setActiveAccountId(accountId);
+  }
+
+  /**
+   * 监听认证状态变化
+   */
+  onAuthStateChange(callback: (state: AuthStateInfo) => void): () => void {
+    this.stateChangeListeners.add(callback);
+    return () => this.stateChangeListeners.delete(callback);
+  }
+
+  /**
+   * 刷新 Token
+   */
+  private async refreshToken(accountId: string): Promise<void> {
+    console.log('[GoogleAuth] Refreshing token for:', accountId);
+    this.setState(AuthState.REFRESHING);
+
+    try {
+      const token = await this.tokenStorage.getToken(accountId);
+      if (!token?.refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const params = new URLSearchParams({
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        refresh_token: token.refreshToken,
+        grant_type: 'refresh_token',
+      });
+
+      const response = await this.makeTokenRequest(params);
+
+      await this.tokenStorage.updateAccessToken(
+        accountId,
+        response.access_token,
+        response.expires_in
+      );
+
+      this.setState(AuthState.AUTHENTICATED);
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      console.error('[GoogleAuth] Token refresh failed:', errorMessage);
+      this.lastError = errorMessage;
+      this.setState(AuthState.TOKEN_EXPIRED);
+      throw e;
+    }
+  }
+
+  /**
+   * 构建授权 URL
+   */
+  private buildAuthUrl(redirectUri: string, state: string, codeChallenge: string): string {
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: GOOGLE_SCOPES,
+      state: state,
+      code_challenge: codeChallenge,
+      code_challenge_method: 'S256',
+      access_type: 'offline',
+      prompt: 'consent',
+    });
+
+    return `${GOOGLE_AUTH_ENDPOINT}?${params.toString()}`;
+  }
+
+  /**
+   * 交换 authorization code 获取 Token
+   */
+  private async exchangeCodeForToken(
+    code: string,
+    redirectUri: string,
+    codeVerifier: string
+  ): Promise<TokenData> {
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      client_secret: GOOGLE_CLIENT_SECRET,
+      code: code,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code',
+      code_verifier: codeVerifier,
+    });
+
+    const response = await this.makeTokenRequest(params);
+
+    if (!response.refresh_token) {
+      throw new Error('No refresh token in response');
+    }
+
+    return {
+      accessToken: response.access_token,
+      refreshToken: response.refresh_token,
+      expiresAt: Date.now() + response.expires_in * 1000,
+      tokenType: response.token_type,
+      scope: response.scope,
+    };
+  }
+
+  /**
+   * 发送 Token 请求
+   */
+  private makeTokenRequest(params: URLSearchParams): Promise<TokenResponse> {
+    return new Promise((resolve, reject) => {
+      const postData = params.toString();
+      const url = new URL(GOOGLE_TOKEN_ENDPOINT);
+
+      const options: https.RequestOptions = {
+        hostname: url.hostname,
+        port: 443,
+        path: url.pathname,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(postData),
+        },
+      };
+
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          try {
+            const response = JSON.parse(data);
+            if (response.error) {
+              reject(new Error(`Token error: ${response.error} - ${response.error_description}`));
+            } else {
+              resolve(response as TokenResponse);
+            }
+          } catch (e) {
+            reject(new Error(`Failed to parse token response: ${data}`));
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.write(postData);
+      req.end();
+    });
+  }
+
+  /**
+   * 获取用户信息
+   */
+  private fetchUserInfo(accessToken: string): Promise<UserInfoResponse> {
+    return new Promise((resolve, reject) => {
+      const options: https.RequestOptions = {
+        hostname: 'www.googleapis.com',
+        port: 443,
+        path: '/oauth2/v2/userinfo',
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      };
+
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          try {
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              resolve(JSON.parse(data) as UserInfoResponse);
+            } else {
+              reject(new Error(`Failed to fetch user info: ${res.statusCode}`));
+            }
+          } catch (e) {
+            reject(new Error(`Failed to parse user info: ${data}`));
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.end();
+    });
+  }
+
+  /**
+   * 设置状态并通知监听器
+   */
+  private setState(state: AuthState): void {
+    this.currentState = state;
+    const stateInfo = this.getAuthState();
+    this.stateChangeListeners.forEach((listener) => {
+      try {
+        listener(stateInfo);
+      } catch (e) {
+        console.error('[GoogleAuth] Listener error:', e);
+      }
+    });
+  }
+}
