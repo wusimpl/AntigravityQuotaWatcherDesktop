@@ -14,9 +14,35 @@ interface DisplayModel {
   displayName: string;
   alias: string;
   remainingPercentage: number;
+  resetTime?: string;
 }
 
 const MAX_VISIBLE_MODELS = 2;
+
+// 格式化重置时间为简化格式（只显示最大单位）
+const formatResetTimeSimple = (resetTime?: string): string => {
+  if (!resetTime) return '';
+  const reset = new Date(resetTime);
+  const now = new Date();
+  const diffMs = reset.getTime() - now.getTime();
+  
+  if (diffMs <= 0) return '';
+  
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  // 超过1天显示天数
+  if (diffDays >= 1) {
+    return `${diffDays}D`;
+  }
+  // 超过1小时显示小时数
+  if (diffHours >= 1) {
+    return `${diffHours}H`;
+  }
+  // 否则显示分钟数
+  return `${diffMins}Min`;
+};
 
 const Widget: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>({
@@ -27,6 +53,7 @@ const Widget: React.FC = () => {
     notifications: true,
     showWidget: true,
     widgetScale: 1,
+    showResetTimeInWidget: true,
     language: 'auto',
   });
   const [accountModelConfigs, setAccountModelConfigs] = useState<AccountModelConfigs>({});
@@ -103,23 +130,24 @@ const Widget: React.FC = () => {
 
   // 获取要显示的模型数据
   const getDisplayModels = (): DisplayModel[] => {
-    return selectedModels
-      .map(selected => {
-        const snapshot = allQuotas[selected.accountId];
-        const modelData = snapshot?.models?.find(m => m.modelId === selected.modelId);
-        if (!modelData) return null;
+    const models: DisplayModel[] = [];
+    for (const selected of selectedModels) {
+      const snapshot = allQuotas[selected.accountId];
+      const modelData = snapshot?.models?.find(m => m.modelId === selected.modelId);
+      if (!modelData) continue;
 
-        const config = accountModelConfigs[selected.accountId]?.[selected.modelId];
-        return {
-          accountId: selected.accountId,
-          modelId: selected.modelId,
-          displayName: modelData.displayName,
-          alias: config?.alias || modelData.displayName,
-          remainingPercentage: modelData.remainingPercentage,
-        };
-      })
-      .filter((m): m is DisplayModel => m !== null)
-      .slice(0, MAX_VISIBLE_MODELS);
+      const config = accountModelConfigs[selected.accountId]?.[selected.modelId];
+      models.push({
+        accountId: selected.accountId,
+        modelId: selected.modelId,
+        displayName: modelData.displayName,
+        alias: config?.alias || modelData.displayName,
+        remainingPercentage: modelData.remainingPercentage,
+        resetTime: modelData.resetTime,
+      });
+      if (models.length >= MAX_VISIBLE_MODELS) break;
+    }
+    return models;
   };
 
   const displayModels = getDisplayModels();
@@ -275,6 +303,12 @@ const Widget: React.FC = () => {
                 {Math.round(leftModel.remainingPercentage)}%
               </span>
             </div>
+            {/* Reset Time */}
+            {settings.showResetTimeInWidget && formatResetTimeSimple(leftModel.resetTime) && (
+              <span className="text-[10px] text-white/50 font-medium tracking-wide">
+                ↻ {formatResetTimeSimple(leftModel.resetTime)}
+              </span>
+            )}
           </div>
         </div>
 
@@ -297,6 +331,12 @@ const Widget: React.FC = () => {
                   {Math.round(rightModel.remainingPercentage)}%
                 </span>
               </div>
+              {/* Reset Time */}
+              {settings.showResetTimeInWidget && formatResetTimeSimple(rightModel.resetTime) && (
+                <span className="text-[10px] text-white/50 font-medium tracking-wide">
+                  ↻ {formatResetTimeSimple(rightModel.resetTime)}
+                </span>
+              )}
             </div>
           </div>
         )}

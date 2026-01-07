@@ -37,6 +37,7 @@ export interface AppSettings {
   notifications: boolean;     // 系统通知
   showWidget: boolean;        // 显示悬浮窗
   widgetScale: number;        // 悬浮窗缩放比例 (0.5-1.5)
+  showResetTimeInWidget: boolean; // 在悬浮窗显示重置时间
   language: 'auto' | 'zh-CN' | 'en';
 }
 

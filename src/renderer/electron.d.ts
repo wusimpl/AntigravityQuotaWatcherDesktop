@@ -72,6 +72,7 @@ interface AppSettings {
   notifications: boolean;
   showWidget: boolean;
   widgetScale: number;
+  showResetTimeInWidget: boolean;
   language: 'auto' | 'zh-CN' | 'en';
 }
 

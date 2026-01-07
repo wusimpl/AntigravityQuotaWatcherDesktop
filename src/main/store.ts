@@ -34,6 +34,7 @@ const defaults: StoreSchema = {
     notifications: true,
     showWidget: false,  // 默认不显示悬浮窗
     widgetScale: 1,     // 默认缩放比例
+    showResetTimeInWidget: true, // 默认显示重置时间
     language: 'auto',
   },
   modelConfigs: {},
