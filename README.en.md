@@ -125,8 +125,6 @@ Additionally, please be aware of the following:
 3. If the license changes, it will be updated in this GitHub repository without further notice
 
 ## Acknowledgements
-
-- [Antigravity Quota Watcher](https://github.com/wusimpl/AntigravityQuotaWatcher) - The extension version of this project
 - [Antigravity-Manager](https://github.com/xisuo67/Antigravity-Manager) - Reference for Google API login flow
 
 ## License

@@ -125,8 +125,6 @@
 3. 如果开源协议变更，将在此 Github 仓库更新，不另行通知
 
 ## 致谢
-
-- [Antigravity Quota Watcher](https://github.com/wusimpl/AntigravityQuotaWatcher) - 本项目的插件版本
 - [Antigravity-Manager](https://github.com/xisuo67/Antigravity-Manager) - Google API 登录流程参考
 
 ## 许可证
