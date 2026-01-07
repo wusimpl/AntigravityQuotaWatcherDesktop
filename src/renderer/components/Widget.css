@@ -1,96 +1,97 @@
 /**
- * Widget 水箱波浪动画样式 - 适配胶囊形状
+ * Widget 水箱波浪动画样式 - 旋转圆形波浪方案
+ * 参考横向胶囊水箱设计，使用旋转的大圆形模拟波浪晃动效果
  */
 
-/* 波浪水平移动动画 */
-@keyframes wave-move {
-  from {
-    transform: translateX(0);
+/* 1. 波浪旋转动画 - 带水平晃动 */
+@keyframes wave-rotate {
+  0% {
+    transform: rotate(0deg) translateX(-3%);
   }
-  to {
-    transform: translateX(-50%);
+  50% {
+    transform: rotate(180deg) translateX(3%);
   }
-}
-
-@-webkit-keyframes wave-move {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
+  100% {
+    transform: rotate(360deg) translateX(-3%);
   }
 }
 
-/* 水箱容器 */
+/* 2. 水箱容器 */
 .water-tank {
   position: absolute;
-  bottom: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border-radius: inherit;
+  border-radius: inherit; /* 继承胶囊圆角 */
+  z-index: 0;
+  /* 解决 Safari/Chrome 边缘溢出渲染瑕疵 */
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  
+  /* CSS 变量控制 */
+  --wave-speed: 4s;
+  --wave-top: 100%;
+  --wave-radius: 43%;
 }
 
-/* 水体主体 */
-.water-tank .water-body {
+/* 3. 波浪组 (控制水位高度) */
+.water-tank .wave-group {
   position: absolute;
   left: 0;
   width: 100%;
-  height: 200%;
-  transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 高度需要足够大以容纳旋转的圆形 */
+  height: 500px;
+  transition: top 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.water-tank.blue .water-body {
-  background: rgba(96, 165, 250, 0.9);
-}
-
-.water-tank.orange .water-body {
-  background: rgba(251, 146, 60, 0.9);
-}
-
-/* 波浪层容器 */
+/* 4. 波浪层 (旋转的大圆形) */
 .water-tank .wave-layer {
+  content: "";
   position: absolute;
-  left: 0;
-  width: 200%;
-  height: 14px;
-  transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform, top;
-  -webkit-animation-fill-mode: both;
-  animation-fill-mode: both;
+  /* 使用大尺寸确保覆盖整个容器 */
+  width: 400px;
+  height: 400px;
+  left: 50%;
+  margin-left: -200px;
+  top: 0;
+  animation: wave-rotate linear infinite;
+  will-change: transform;
+  transition: border-radius 0.4s ease;
 }
 
-/* 前景波浪 */
+/* 5. 前浪 */
 .water-tank .wave-front {
   z-index: 2;
+  border-radius: var(--wave-radius);
 }
 
-/* 后景波浪 */
+/* 6. 后浪 */
 .water-tank .wave-back {
   z-index: 1;
-  opacity: 0.6;
+  border-radius: calc(var(--wave-radius) * 0.97);
+  animation-direction: reverse;
 }
 
-/* 波浪 SVG */
-.water-tank .wave-layer svg {
-  display: block;
-  width: 100%;
-  height: 100%;
+/* --- 颜色定义 --- */
+.water-tank.blue .wave-front {
+  background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
 }
 
-.water-tank.blue .wave-front svg {
-  fill: rgba(96, 165, 250, 0.95);
+.water-tank.blue .wave-back {
+  background: rgba(59, 130, 246, 0.5);
 }
 
-.water-tank.blue .wave-back svg {
-  fill: rgba(96, 165, 250, 0.5);
+.water-tank.orange .wave-front {
+  background: linear-gradient(180deg, #fb923c 0%, #f97316 100%);
 }
 
-.water-tank.orange .wave-front svg {
-  fill: rgba(251, 146, 60, 0.95);
+.water-tank.orange .wave-back {
+  background: rgba(249, 115, 22, 0.5);
 }
 
-.water-tank.orange .wave-back svg {
-  fill: rgba(251, 146, 60, 0.5);
+/* 静止状态 */
+.water-tank.still .wave-layer {
+  animation: none !important;
+  transform: none !important;
+  border-radius: 0% !important;
 }

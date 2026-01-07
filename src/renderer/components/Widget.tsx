@@ -185,55 +185,59 @@ const Widget: React.FC = () => {
     </svg>
   );
 
-  // 水箱波浪组件 - 适配胶囊形状的水平波浪
+  // [修改] 水箱波浪组件 - 旋转圆形波浪版
   const WaterTank = ({ percentage, color, waveSpeed = 5 }: { percentage: number; color: 'blue' | 'orange'; waveSpeed?: number }) => {
-    // 计算波浪顶部位置
-    let topValue = 100 - Math.max(0, Math.min(100, percentage));
-    if (percentage > 95) topValue -= 10;
+    // 1. 计算水位 (Top)
+    // 液位逻辑：0% 为 100% (底部空)，100% 对应 0% (顶部满)
+    let topValue = 100 - percentage;
+    // 边缘修正：胶囊形状需要额外调整以覆盖所有角落
+    if (percentage > 92) {
+      topValue -= 15; // 满额时多溢出一点
+    } else if (percentage < 8) {
+      topValue += 8; // 底部留白修正
+    }
 
-    // 计算动画速度：waveSpeed 0=静止, 1-10 对应不同速度（防御：容错/钳制）
-    const speedRaw = typeof waveSpeed === 'number' && Number.isFinite(waveSpeed) ? waveSpeed : 5;
-    const speed = Math.max(0, Math.min(10, speedRaw));
+    // 2. 计算速度
+    // waveSpeed: 0-10
+    // speed=0 -> 静止
+    // speed=10 -> 周期 1.5s (快)
+    // speed=1 -> 周期 12s (慢)
+    const speed = Math.max(0, Math.min(10, waveSpeed ?? 5));
     const isStill = speed === 0;
-    const duration = (11 - speed) * 0.8; // 1->8s, 10->0.8s
-
-    // 波浪 SVG 路径（单段），渲染两段实现无缝滚动
-    const waveSegmentWidth = 360;
-    const waveViewHeight = 20;
-    const wavePath = "M0,6 C30,0 60,12 90,6 C120,0 150,12 180,6 C210,0 240,12 270,6 C300,0 330,12 360,6 L360,20 L0,20 Z";
-
-    const waveLayerStyle = (offset: number = 0): React.CSSProperties => ({
-      top: `${topValue + offset}%`,
-      animation: isStill ? 'none' : `wave-move ${duration}s linear infinite`,
-      animationPlayState: isStill ? 'paused' : 'running',
-    });
-
-    const waveBackStyle: React.CSSProperties = {
-      top: `${topValue - 2}%`,
-      animation: isStill ? 'none' : `wave-move ${duration * 1.5}s linear infinite reverse`,
-      animationPlayState: isStill ? 'paused' : 'running',
-    };
-
-    const waveSvg = (
-      <svg viewBox={`0 0 ${waveSegmentWidth * 2} ${waveViewHeight}`} preserveAspectRatio="none">
-        <path d={wavePath} />
-        <path d={wavePath} transform={`translate(${waveSegmentWidth} 0)`} />
-      </svg>
-    );
+    // 速度映射：1(12s) 到 10(1.5s)
+    const durationSec = speed === 0 ? 0 : (13.5 - speed * 1.2);
+    // 波浪圆角：静止时为0%（平面），运动时为43%（波浪）
+    const waveRadius = isStill ? '0%' : '43%';
 
     return (
-      <div className={`water-tank ${color}`}>
-        {/* 水体主体 */}
-        <div className="water-body" style={{ top: `${topValue}%` }} />
-
-        {/* 后景波浪 */}
-        <div className="wave-layer wave-back" style={waveBackStyle}>
-          {waveSvg}
-        </div>
-
-        {/* 前景波浪 */}
-        <div className="wave-layer wave-front" style={waveLayerStyle()}>
-          {waveSvg}
+      <div 
+        className={`water-tank ${color} ${isStill ? 'still' : ''}`}
+        style={{
+          '--wave-speed': `${durationSec}s`,
+          '--wave-radius': waveRadius,
+        } as React.CSSProperties}
+      >
+        {/* 容器结构：
+            - wave-group: 负责 Y 轴升降 (水位)
+            - wave-layer: 旋转的大圆形，模拟波浪晃动
+        */}
+        <div className="wave-group" style={{ top: `${topValue}%` }}>
+          {/* 后浪 */}
+          <div
+            className="wave-layer wave-back"
+            style={{
+              animationDuration: isStill ? '0s' : `${durationSec * 1.5}s`,
+              animationPlayState: isStill ? 'paused' : 'running',
+            }}
+          />
+          {/* 前浪 */}
+          <div
+            className="wave-layer wave-front"
+            style={{
+              animationDuration: isStill ? '0s' : `${durationSec}s`,
+              animationPlayState: isStill ? 'paused' : 'running',
+            }}
+          />
         </div>
       </div>
     );
