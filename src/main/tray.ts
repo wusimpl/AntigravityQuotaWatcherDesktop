@@ -13,17 +13,22 @@ import { logger } from './logger';
 
 let tray: Tray | null = null;
 
+import fs from 'fs';
 import path from 'path';
 
 /**
  * 获取资源路径
  */
 function getAssetPath(...paths: string[]): string {
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'resources')
-    : path.join(__dirname, '../../resources');
+  // 打包后：优先使用 extraResources 复制出来的目录（process.resourcesPath/resources）
+  // 否则回退到 app.asar 内部的 resources（app.getAppPath()/resources）
+  const unpackedResourcesPath = path.join(process.resourcesPath, 'resources');
+  const resourcesBasePath =
+    app.isPackaged && fs.existsSync(unpackedResourcesPath)
+      ? unpackedResourcesPath
+      : path.join(app.getAppPath(), 'resources');
 
-  return path.join(RESOURCES_PATH, ...paths);
+  return path.join(resourcesBasePath, ...paths);
 }
 
 /**

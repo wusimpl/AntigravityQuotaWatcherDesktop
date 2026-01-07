@@ -4,6 +4,7 @@
  */
 import { BrowserWindow, screen, app } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs';
 import { store } from './store';
 
 let widgetWindow: BrowserWindow | null = null;
@@ -19,13 +20,15 @@ app.on('before-quit', () => {
  * 获取图标路径
  */
 function getIconPath(): string {
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'resources')
-    : path.join(__dirname, '../../resources');
+  const unpackedResourcesPath = path.join(process.resourcesPath, 'resources');
+  const resourcesBasePath =
+    app.isPackaged && fs.existsSync(unpackedResourcesPath)
+      ? unpackedResourcesPath
+      : path.join(app.getAppPath(), 'resources');
 
   // Windows 上使用 ico 效果更好，但 Electron 也支持 png
   // 这里优先使用 png，因为它是通用的
-  return path.join(RESOURCES_PATH, 'icon.png');
+  return path.join(resourcesBasePath, 'icon.png');
 }
 
 /**
