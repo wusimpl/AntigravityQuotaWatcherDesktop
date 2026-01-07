@@ -268,8 +268,11 @@ ipcMain.handle('save-settings', async (_event, data: {
     store.set('selectedModels', selectedModels);
   }
 
-  // 应用轮询间隔
-  quotaService.setPollingInterval(settings.pollingInterval * 1000);
+  // 应用轮询间隔（仅在变化时更新，避免无关设置触发轮询重启 + 立即拉取）
+  const prevPollingInterval = prevSettings?.pollingInterval ?? settings.pollingInterval;
+  if (prevPollingInterval !== settings.pollingInterval) {
+    quotaService.setPollingInterval(settings.pollingInterval * 1000);
+  }
 
   // 应用开机自启设置
   app.setLoginItemSettings({

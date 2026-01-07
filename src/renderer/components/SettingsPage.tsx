@@ -241,6 +241,44 @@ const SettingsPage: React.FC = () => {
     loadSettings();
   }, [loadSettings]);
 
+  // 订阅配额更新：让“重置时间/配额”展示跟随最新快照，避免设置页与悬浮窗显示不一致
+  useEffect(() => {
+    const unsubscribe = window.electronAPI?.onQuotaUpdate((data: { accountId: string; snapshot: QuotaSnapshot }) => {
+      const models = (data.snapshot?.models || []).map(m => ({
+        modelId: m.modelId,
+        displayName: m.displayName,
+        remainingPercentage: m.remainingPercentage,
+        resetTime: m.resetTime,
+      }));
+
+      setAccountQuotas(prev =>
+        prev.map(item => (item.account.id === data.accountId ? { ...item, models } : item))
+      );
+
+      // 如果出现新模型，补齐默认配置（不触发保存，等用户后续操作再保存）
+      setAccountModelConfigs(prev => {
+        const existing = prev[data.accountId] || {};
+        let changed = false;
+        const nextAccountConfigs: Record<string, ModelConfig> = { ...existing };
+
+        for (const model of models) {
+          if (!nextAccountConfigs[model.modelId]) {
+            const defaultAlias = model.displayName.split(/\s+/)[0] || '';
+            nextAccountConfigs[model.modelId] = { visible: true, alias: defaultAlias, order: 0 };
+            changed = true;
+          }
+        }
+
+        if (!changed) return prev;
+        return { ...prev, [data.accountId]: nextAccountConfigs };
+      });
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
+
   // 1s 防抖保存设置：1 秒内多次修改，只保存最后一次
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savePendingRef = useRef(false);
