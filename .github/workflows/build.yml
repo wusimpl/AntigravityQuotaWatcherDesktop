@@ -13,8 +13,10 @@ jobs:
         include:
           - os: windows-latest
             platform: win
+            artifact_name: AG-Quota-Watcher-Windows
           - os: macos-latest
             platform: mac
+            artifact_name: AG-Quota-Watcher-macOS
 
     runs-on: ${{ matrix.os }}
 
@@ -42,7 +44,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-build
+          name: ${{ matrix.artifact_name }}
           path: |
             dist-electron/*.exe
             dist-electron/*.dmg
