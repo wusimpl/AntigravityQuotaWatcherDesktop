@@ -157,6 +157,24 @@ const Widget: React.FC = () => {
 
   const displayModels = getDisplayModels();
 
+  // 让 Electron 窗口大小随胶囊和缩放比例自适应，避免 >100% 时被裁切
+  useEffect(() => {
+    const scale = typeof settings.widgetScale === 'number' && Number.isFinite(settings.widgetScale)
+      ? settings.widgetScale
+      : 1;
+    const baseWidth = displayModels.length > 1 ? 280 : 150;
+    const baseHeight = 86;
+    const safety = 2;
+
+    const width = Math.max(1, Math.ceil(baseWidth * scale) + safety);
+    const height = Math.max(1, Math.ceil(baseHeight * scale) + safety);
+
+    const rafId = window.requestAnimationFrame(() => {
+      window.electronAPI?.setWidgetSize?.({ width, height });
+    });
+    return () => window.cancelAnimationFrame(rafId);
+  }, [settings.widgetScale, displayModels.length]);
+
   // --- UI Components & Helpers ---
 
   // SVG Icons

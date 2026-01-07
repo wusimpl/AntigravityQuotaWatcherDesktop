@@ -9,6 +9,7 @@ import {
   hideWidgetWindow,
   toggleWidgetWindow,
   isWidgetVisible,
+  resizeWidgetWindowContentSize,
   showSettingsWindow,
   closeSettingsWindow,
   getSettingsWindow
@@ -140,6 +141,13 @@ ipcMain.handle('hide-widget', () => {
 
 ipcMain.handle('is-widget-visible', () => {
   return isWidgetVisible();
+});
+
+ipcMain.handle('widget-set-size', (event, size: { width: number; height: number }) => {
+  const senderWindow = BrowserWindow.fromWebContents(event.sender);
+  const widgetWindow = getWidgetWindow();
+  if (!senderWindow || !widgetWindow || senderWindow.id !== widgetWindow.id) return;
+  resizeWidgetWindowContentSize(size.width, size.height);
 });
 
 // 打开设置窗口

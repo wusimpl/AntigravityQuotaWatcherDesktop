@@ -96,6 +96,7 @@ declare global {
       showWidget: () => Promise<void>;
       hideWidget: () => Promise<void>;
       isWidgetVisible: () => Promise<boolean>;
+      setWidgetSize: (size: { width: number; height: number }) => Promise<void>;
 
       // 打开设置
       openSettings: () => Promise<void>;

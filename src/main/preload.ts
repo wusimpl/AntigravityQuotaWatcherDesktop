@@ -97,6 +97,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showWidget: () => ipcRenderer.invoke('show-widget'),
   hideWidget: () => ipcRenderer.invoke('hide-widget'),
   isWidgetVisible: () => ipcRenderer.invoke('is-widget-visible'),
+  setWidgetSize: (size: { width: number; height: number }) => ipcRenderer.invoke('widget-set-size', size),
 
   // 打开设置
   openSettings: () => ipcRenderer.invoke('open-settings'),
@@ -195,6 +196,7 @@ declare global {
       showWidget: () => Promise<void>;
       hideWidget: () => Promise<void>;
       isWidgetVisible: () => Promise<boolean>;
+      setWidgetSize: (size: { width: number; height: number }) => Promise<void>;
 
       // 打开设置
       openSettings: () => Promise<void>;

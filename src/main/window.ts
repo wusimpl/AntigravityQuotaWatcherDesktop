@@ -11,6 +11,11 @@ let widgetWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
 let forceQuit = false;
 
+const WIDGET_BASE_HEIGHT_PX = 86;
+const WIDGET_SINGLE_WIDTH_PX = 150;
+const WIDGET_DOUBLE_WIDTH_PX = 280;
+const WIDGET_SAFETY_MARGIN_PX = 2;
+
 // 监听 app 退出前事件，设置强制退出标志
 app.on('before-quit', () => {
   forceQuit = true;
@@ -31,6 +36,21 @@ function getIconPath(): string {
   return path.join(resourcesBasePath, 'icon.png');
 }
 
+function getWidgetDesiredContentSize(): { width: number; height: number } {
+  const settings = store.get('settings') as { widgetScale?: number } | undefined;
+  const widgetScale = typeof settings?.widgetScale === 'number' && Number.isFinite(settings.widgetScale)
+    ? settings.widgetScale
+    : 1;
+
+  const selectedModels = store.get('selectedModels') as Array<unknown> | undefined;
+  const modelCount = Array.isArray(selectedModels) && selectedModels.length > 1 ? 2 : 1;
+  const baseWidth = modelCount > 1 ? WIDGET_DOUBLE_WIDTH_PX : WIDGET_SINGLE_WIDTH_PX;
+
+  const width = Math.max(1, Math.ceil(baseWidth * widgetScale) + WIDGET_SAFETY_MARGIN_PX);
+  const height = Math.max(1, Math.ceil(WIDGET_BASE_HEIGHT_PX * widgetScale) + WIDGET_SAFETY_MARGIN_PX);
+  return { width, height };
+}
+
 /**
  * 创建悬浮窗（小组件风格，无边框无按钮）
  */
@@ -38,20 +58,19 @@ export async function createWidgetWindow(): Promise<BrowserWindow> {
   // 获取保存的窗口位置
   const savedBounds = store.get('widgetBounds') as { x: number; y: number; width: number; height: number } | undefined;
 
-  // 默认窗口大小（紧凑的小组件）
-  const defaultWidth = 280;
-  const defaultHeight = 180;
+  const desiredSize = getWidgetDesiredContentSize();
 
   // 计算初始位置（右下角）
   const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
-  const defaultX = screenWidth - defaultWidth - 20;
-  const defaultY = screenHeight - defaultHeight - 20;
+  const defaultX = screenWidth - desiredSize.width - 20;
+  const defaultY = screenHeight - desiredSize.height - 20;
 
   widgetWindow = new BrowserWindow({
-    width: savedBounds?.width || defaultWidth,
-    height: savedBounds?.height || defaultHeight,
+    width: desiredSize.width,
+    height: desiredSize.height,
     x: savedBounds?.x ?? defaultX,
     y: savedBounds?.y ?? defaultY,
+    useContentSize: true,
     frame: false,           // 无边框
     transparent: true,      // 透明背景
     alwaysOnTop: true,      // 置顶
@@ -97,6 +116,26 @@ export async function createWidgetWindow(): Promise<BrowserWindow> {
   });
 
   return widgetWindow;
+}
+
+export function resizeWidgetWindowContentSize(contentWidth: number, contentHeight: number): void {
+  if (!widgetWindow || widgetWindow.isDestroyed()) return;
+
+  const width = Math.max(1, Math.round(contentWidth));
+  const height = Math.max(1, Math.round(contentHeight));
+  const [currentWidth, currentHeight] = widgetWindow.getContentSize();
+  if (currentWidth === width && currentHeight === height) return;
+
+  const bounds = widgetWindow.getBounds();
+  const newBounds = {
+    x: Math.round(bounds.x + (bounds.width - width) / 2),
+    y: Math.round(bounds.y + (bounds.height - height) / 2),
+    width,
+    height,
+  };
+
+  widgetWindow.setBounds(newBounds, false);
+  store.set('widgetBounds', widgetWindow.getBounds());
 }
 
 /**
