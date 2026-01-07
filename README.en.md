@@ -33,16 +33,29 @@ This is the desktop version of [Antigravity Quota Watcher](https://github.com/wu
 
 ![Windows](https://img.shields.io/badge/Windows-Supported-brightgreen?logo=microsoftwindows&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-Supported-brightgreen?logo=apple&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-Supported-brightgreen?logo=linux&logoColor=white)
 
 ## Installation
 
 ### Windows
 
-[Download the latest release](https://github.com/wusimpl/ag-quota-desktop/releases/latest) `.exe` installer and run it.
+[Download the latest release](https://github.com/wusimpl/AntigravityQuotaWatcherDesktop/releases/latest):
+- **Setup**: `.exe` installer, double-click to install
+- **Portable**: No installation required, extract and run
 
 ### macOS
 
-[Download the latest release](https://github.com/wusimpl/ag-quota-desktop/releases/latest) `.dmg` file and drag it to your Applications folder.
+[Download the latest release](https://github.com/wusimpl/AntigravityQuotaWatcherDesktop/releases/latest) `.dmg` file:
+- **x64**: For Intel Macs
+- **arm64**: For Apple Silicon (M1/M2/M3) Macs
+
+Drag it to your Applications folder.
+
+### Linux
+
+[Download the latest release](https://github.com/wusimpl/AntigravityQuotaWatcherDesktop/releases/latest):
+- **AppImage**: No installation required, add execute permission and run (`chmod +x *.AppImage`)
+- **deb**: For Debian/Ubuntu, install with `sudo dpkg -i *.deb`
 
 ## Usage
 

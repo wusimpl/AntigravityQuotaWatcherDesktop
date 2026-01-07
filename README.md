@@ -33,16 +33,29 @@
 
 ![Windows](https://img.shields.io/badge/Windows-支持-brightgreen?logo=microsoftwindows&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-支持-brightgreen?logo=apple&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-支持-brightgreen?logo=linux&logoColor=white)
 
 ## 安装方法
 
 ### Windows
 
-[下载最新版本](https://github.com/wusimpl/ag-quota-desktop/releases/latest) 的 `.exe` 安装包，双击安装即可。
+[下载最新版本](https://github.com/wusimpl/AntigravityQuotaWatcherDesktop/releases/latest) 的安装包：
+- **Setup 版本**：`.exe` 安装包，双击安装
+- **Portable 版本**：免安装，解压即用
 
 ### macOS
 
-[下载最新版本](https://github.com/wusimpl/ag-quota-desktop/releases/latest) 的 `.dmg` 文件，拖拽到 Applications 文件夹即可。
+[下载最新版本](https://github.com/wusimpl/AntigravityQuotaWatcherDesktop/releases/latest) 的 `.dmg` 文件：
+- **x64**：Intel 芯片 Mac
+- **arm64**：Apple Silicon (M1/M2/M3) Mac
+
+拖拽到 Applications 文件夹即可。
+
+### Linux
+
+[下载最新版本](https://github.com/wusimpl/AntigravityQuotaWatcherDesktop/releases/latest)：
+- **AppImage**：免安装，添加执行权限后直接运行 (`chmod +x *.AppImage`)
+- **deb**：Debian/Ubuntu 系统，使用 `sudo dpkg -i *.deb` 安装
 
 ## 使用方法
 
