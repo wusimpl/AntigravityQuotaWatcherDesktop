@@ -305,7 +305,7 @@ const Widget: React.FC = () => {
             </div>
             {/* Reset Time */}
             {settings.showResetTimeInWidget && formatResetTimeSimple(leftModel.resetTime) && (
-              <span className="text-[10px] text-white/50 font-medium tracking-wide">
+              <span className="text-xs text-white/60 font-semibold tracking-wide">
                 ↻ {formatResetTimeSimple(leftModel.resetTime)}
               </span>
             )}
@@ -333,7 +333,7 @@ const Widget: React.FC = () => {
               </div>
               {/* Reset Time */}
               {settings.showResetTimeInWidget && formatResetTimeSimple(rightModel.resetTime) && (
-                <span className="text-[10px] text-white/50 font-medium tracking-wide">
+                <span className="text-xs text-white/60 font-semibold tracking-wide">
                   ↻ {formatResetTimeSimple(rightModel.resetTime)}
                 </span>
               )}
