@@ -25,12 +25,12 @@ const formatResetTime = (resetTime: string | undefined, t: ReturnType<typeof use
   const reset = new Date(resetTime);
   const now = new Date();
   const diffMs = reset.getTime() - now.getTime();
-  
+
   if (diffMs <= 0) return t.resetTimer.reset;
-  
+
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  
+
   if (diffHours > 24) {
     const days = Math.floor(diffHours / 24);
     return format(t.resetTimer.daysLater, { days });
@@ -41,13 +41,13 @@ const formatResetTime = (resetTime: string | undefined, t: ReturnType<typeof use
   return format(t.resetTimer.minutes, { minutes: diffMins });
 };
 
-const ModelRow: React.FC<ModelRowProps> = React.memo(({ 
-  accountId, 
-  model, 
-  config, 
-  isSelected, 
+const ModelRow: React.FC<ModelRowProps> = React.memo(({
+  accountId,
+  model,
+  config,
+  isSelected,
   canSelect,
-  onToggleSelect, 
+  onToggleSelect,
   onAliasChange,
   t,
   format,
@@ -93,9 +93,8 @@ const ModelRow: React.FC<ModelRowProps> = React.memo(({
   };
 
   return (
-    <div className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-      isSelected ? 'bg-blue-900/30 border border-blue-500/30' : 'bg-gray-800'
-    }`}>
+    <div className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isSelected ? 'bg-blue-900/30 border border-blue-500/30' : 'bg-gray-800'
+      }`}>
       <label className="relative inline-flex items-center cursor-pointer">
         <input
           type="checkbox"
@@ -104,11 +103,10 @@ const ModelRow: React.FC<ModelRowProps> = React.memo(({
           disabled={!isSelected && !canSelect}
           className="sr-only peer"
         />
-        <div className={`w-8 h-4 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all ${
-          !isSelected && !canSelect 
-            ? 'bg-gray-700 cursor-not-allowed after:bg-gray-400' 
-            : 'bg-gray-600 peer-checked:bg-blue-600'
-        }`}></div>
+        <div className={`w-8 h-4 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all ${!isSelected && !canSelect
+          ? 'bg-gray-700 cursor-not-allowed after:bg-gray-400'
+          : 'bg-gray-600 peer-checked:bg-blue-600'
+          }`}></div>
       </label>
       <span className="text-sm text-gray-300 flex-1 truncate" title={model.modelId}>
         {model.displayName}
@@ -169,7 +167,7 @@ const SettingsPage: React.FC = () => {
   const [accountModelConfigs, setAccountModelConfigs] = useState<AccountModelConfigs>({});
   const [selectedModels, setSelectedModels] = useState<SelectedModel[]>([]);
   const [accountQuotas, setAccountQuotas] = useState<AccountQuotaData[]>([]);
-  const [accounts, setAccounts] = useState<AccountInfo[]>([]);
+  // accounts 数据已整合到 accountQuotas 中，不再需要单独的 state
   const [isLoading, setIsLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
@@ -195,7 +193,7 @@ const SettingsPage: React.FC = () => {
         setAccountModelConfigs(data.accountModelConfigs || {});
         setSelectedModels(data.selectedModels || []);
       }
-      setAccounts(accountList || []);
+      // 注：accounts 数据已整合到 accountQuotas 中
 
       // 构建每个账户的模型列表
       if (accountList && allQuotas) {
@@ -370,7 +368,7 @@ const SettingsPage: React.FC = () => {
     setSelectedModels(prev => {
       const isCurrentlySelected = prev.some(s => s.accountId === accountId && s.modelId === modelId);
       let newSelected: SelectedModel[];
-      
+
       if (isCurrentlySelected) {
         // 取消选中
         newSelected = prev.filter(s => !(s.accountId === accountId && s.modelId === modelId));
@@ -381,7 +379,7 @@ const SettingsPage: React.FC = () => {
         // 已经有2个了，不能再添加
         return prev;
       }
-      
+
       latestSelectedModelsRef.current = newSelected;
       scheduleSaveSettings();
       return newSelected;
@@ -660,7 +658,7 @@ const SettingsPage: React.FC = () => {
               {format(t.settings.selectedCount, { count: selectedModels.length })}
             </span>
           </div>
-          
+
           {accountQuotas.length === 0 ? (
             <div className="text-sm text-gray-500 py-2 px-3 bg-gray-800 rounded-lg">
               {t.settings.noModelData}
@@ -677,7 +675,7 @@ const SettingsPage: React.FC = () => {
                     <span className="w-20 text-xs text-gray-500 text-center">{t.settings.resetTime}</span>
                     <span className="w-24 text-xs text-gray-500 text-center">{t.settings.alias}</span>
                   </div>
-                  
+
                   {/* 模型列表 - 限制高度可滚动 */}
                   <div className="max-h-48 overflow-y-auto p-2 space-y-1.5">
                     {models.length === 0 ? (
@@ -705,7 +703,7 @@ const SettingsPage: React.FC = () => {
               ))}
             </div>
           )}
-          
+
           <button
             className="w-full mt-3 px-3 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded-lg border border-dashed border-gray-600 transition-colors"
             onClick={handleRefreshModels}
@@ -723,10 +721,10 @@ const SettingsPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <input
                   type="number"
-                  min={10}
+                  min={30}
                   max={600}
                   value={settings.pollingInterval}
-                  onChange={e => updateSetting('pollingInterval', Math.max(10, parseInt(e.target.value) || 60))}
+                  onChange={e => updateSetting('pollingInterval', Math.max(30, parseInt(e.target.value) || 60))}
                   className="w-16 px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-gray-200 text-center focus:outline-none focus:border-blue-500"
                 />
                 <span className="text-sm text-gray-500">{t.common.seconds}</span>
@@ -738,10 +736,17 @@ const SettingsPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <input
                   type="number"
-                  min={0}
+                  min={1}
                   max={100}
                   value={settings.warningThreshold}
-                  onChange={e => updateSetting('warningThreshold', Math.min(100, Math.max(0, parseInt(e.target.value) || 50)))}
+                  onChange={e => {
+                    const newValue = Math.min(100, Math.max(1, parseInt(e.target.value) || 50));
+                    updateSetting('warningThreshold', newValue);
+                    // 确保紧急阈值小于警告阈值
+                    if (settings.criticalThreshold >= newValue) {
+                      updateSetting('criticalThreshold', Math.max(0, newValue - 1));
+                    }
+                  }}
                   className="w-16 px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-gray-200 text-center focus:outline-none focus:border-blue-500"
                 />
                 <span className="text-sm text-gray-500">{t.common.percent}</span>
@@ -754,9 +759,14 @@ const SettingsPage: React.FC = () => {
                 <input
                   type="number"
                   min={0}
-                  max={100}
+                  max={settings.warningThreshold - 1}
                   value={settings.criticalThreshold}
-                  onChange={e => updateSetting('criticalThreshold', Math.min(100, Math.max(0, parseInt(e.target.value) || 30)))}
+                  onChange={e => {
+                    // 紧急阈值必须小于警告阈值
+                    const maxAllowed = settings.warningThreshold - 1;
+                    const newValue = Math.min(maxAllowed, Math.max(0, parseInt(e.target.value) || 30));
+                    updateSetting('criticalThreshold', newValue);
+                  }}
                   className="w-16 px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-gray-200 text-center focus:outline-none focus:border-blue-500"
                 />
                 <span className="text-sm text-gray-500">{t.common.percent}</span>

@@ -367,18 +367,22 @@ const Widget: React.FC = () => {
         4. Inner Reflection (Top gloss)
       */}
       <div
-        className="drag-region relative group cursor-default transition-all duration-500 hover:scale-[1.02]"
-        style={{ transform: `scale(${settings.widgetScale || 1})` }}
+        className="drag-region relative cursor-default"
+        style={
+          (settings.widgetScale ?? 1) === 1
+            ? undefined
+            : { transform: `scale(${settings.widgetScale ?? 1})` }
+        }
       >
 
         {/* 1. Global Atmosphere Glow (Behind) */}
-        <div className="absolute -inset-8 bg-gradient-to-r from-blue-600/30 via-purple-500/10 to-orange-600/30 rounded-[60px] blur-3xl opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
+        <div className="absolute -inset-8 bg-gradient-to-r from-blue-600/30 via-purple-500/10 to-orange-600/30 rounded-[60px] blur-3xl opacity-40" />
 
         {/* 2. The Glass Capsule Wrapper */}
         <div className={`relative h-[86px] rounded-[44px] p-[1px] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8)] transition-all duration-300 ${displayModels.length > 1 ? 'w-[280px] bg-gradient-to-r from-blue-400/30 via-white/20 to-orange-400/30' : 'w-[150px] bg-gradient-to-r from-blue-400/30 to-blue-400/10'}`}>
 
           {/* 3. Inner Body Background */}
-          <div className="relative w-full h-full bg-[#0a0a0a]/80 backdrop-blur-2xl rounded-[43px] flex items-center overflow-hidden border border-white/5">
+          <div className="relative w-full h-full bg-[#0a0a0a]/80 rounded-[43px] flex items-center overflow-hidden border border-white/5">
 
             {/* Background Gradients (Subtle internal lighting) */}
             <div className="absolute top-0 left-0 w-3/5 h-full bg-gradient-to-r from-blue-600/10 via-blue-900/5 to-transparent mix-blend-screen" />
@@ -399,7 +403,7 @@ const Widget: React.FC = () => {
         </div>
 
         {/* Label: Binary Capsule (Bottom) */}
-        <div className="absolute -bottom-8 left-0 right-0 text-center transition-opacity duration-300 opacity-0 group-hover:opacity-100 pointer-events-none">
+        <div className="absolute -bottom-8 left-0 right-0 text-center opacity-0 pointer-events-none">
           <span className="text-[9px] font-medium tracking-[0.3em] uppercase text-white/40 text-shadow-sm">
             {t.widget.appName}
           </span>

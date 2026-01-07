@@ -2,7 +2,7 @@
  * i18n Context Provider
  * 提供全局语言状态管理
  */
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import { getTranslations, formatMessage, resolveLanguage, type Language, type Translations } from './index';
 
 interface I18nContextValue {

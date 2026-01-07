@@ -1,7 +1,7 @@
 /**
  * i18n React Hook
  */
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { getTranslations, formatMessage, resolveLanguage, type Language, type Translations } from './index';
 
 interface UseI18nResult {
@@ -18,7 +18,7 @@ interface UseI18nResult {
 export function useI18n(initialLanguage: Language = 'auto'): UseI18nResult {
   const [language, setLanguageState] = useState<Language>(initialLanguage);
   const resolvedLanguage = resolveLanguage(language);
-  
+
   // 获取翻译对象
   const t = useMemo(() => getTranslations(language), [language]);
 
@@ -45,7 +45,7 @@ export function useI18n(initialLanguage: Language = 'auto'): UseI18nResult {
  */
 export function createFormatter(language: Language) {
   const t = getTranslations(language);
-  
+
   return {
     t,
     format: (template: string, params?: Record<string, string | number>) => {
