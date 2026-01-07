@@ -26,13 +26,13 @@ const formatResetTimeSimple = (resetTime?: string): string => {
   const reset = new Date(resetTime);
   const now = new Date();
   const diffMs = reset.getTime() - now.getTime();
-  
+
   if (diffMs <= 0) return '';
-  
+
   const diffMins = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  
+
   // 超过1天显示天数
   if (diffDays >= 1) {
     return `${diffDays}D`;
@@ -103,7 +103,7 @@ const Widget: React.FC = () => {
     };
 
     const unsubscribe = window.electronAPI?.onQuotaUpdate(handleQuotaUpdate);
-    
+
     return () => {
       if (typeof unsubscribe === 'function') {
         unsubscribe();
@@ -113,8 +113,8 @@ const Widget: React.FC = () => {
 
   // 监听设置更新
   useEffect(() => {
-    const handleSettingsUpdate = (data: { 
-      settings: AppSettings; 
+    const handleSettingsUpdate = (data: {
+      settings: AppSettings;
       modelConfigs: Record<string, ModelConfig>;
       accountModelConfigs: AccountModelConfigs;
       selectedModels: SelectedModel[];
@@ -125,7 +125,7 @@ const Widget: React.FC = () => {
     };
 
     const unsubscribe = window.electronAPI?.onSettingsUpdate?.(handleSettingsUpdate);
-    
+
     return () => {
       if (typeof unsubscribe === 'function') {
         unsubscribe();
@@ -210,7 +210,7 @@ const Widget: React.FC = () => {
     const waveRadius = isStill ? '0%' : '43%';
 
     return (
-      <div 
+      <div
         className={`water-tank ${color} ${isStill ? 'still' : ''}`}
         style={{
           '--wave-speed': `${durationSec}s`,
@@ -294,7 +294,7 @@ const Widget: React.FC = () => {
 
     const LeftIcon = getModelIcon(leftModel.modelId, leftModel.alias);
     const RightIcon = rightModel ? getModelIcon(rightModel.modelId, rightModel.alias) : BotIcon;
-    
+
     const leftColor = getQuotaColor(leftModel.remainingPercentage);
     const rightColor = rightModel ? getQuotaColor(rightModel.remainingPercentage) : null;
 
@@ -304,7 +304,7 @@ const Widget: React.FC = () => {
         <div className={`relative flex-1 h-full flex flex-col items-center justify-center overflow-hidden ${rightModel ? 'rounded-l-[43px] rounded-r-[0px]' : 'rounded-[43px]'}`}>
           {/* 水箱效果 */}
           <WaterTank percentage={leftModel.remainingPercentage} color="blue" waveSpeed={settings.waveSpeed ?? 5} />
-          
+
           {/* 内容层 */}
           <div className="relative z-10 flex flex-col items-center gap-0.5">
             {(settings.showModelNameInWidget ?? true) && (
@@ -336,7 +336,7 @@ const Widget: React.FC = () => {
           <div className="relative flex-1 h-full flex flex-col items-center justify-center overflow-hidden rounded-r-[43px] rounded-l-[0px]">
             {/* 水箱效果 */}
             <WaterTank percentage={rightModel.remainingPercentage} color="orange" waveSpeed={settings.waveSpeed ?? 5} />
-            
+
             {/* 内容层 */}
             <div className="relative z-10 flex flex-col items-center gap-0.5">
               {(settings.showModelNameInWidget ?? true) && (

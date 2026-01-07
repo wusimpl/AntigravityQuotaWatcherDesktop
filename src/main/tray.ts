@@ -36,9 +36,9 @@ function getAssetPath(...paths: string[]): string {
  * 获取托盘图标
  */
 function getTrayIcon(): Electron.NativeImage {
-  // Windows 推荐使用 ICO，但 nativeImage 也很好地支持 PNG
-  // 为了最佳效果，我们使用专门生成的托盘 PNG
-  const iconName = 'tray-32x32.png';
+  // macOS 托盘图标推荐 16x16（系统会自动处理 Retina 显示）
+  // Windows 托盘图标推荐 32x32
+  const iconName = process.platform === 'darwin' ? 'tray-16x16.png' : 'tray-32x32.png';
   const iconPath = getAssetPath(iconName);
 
   // 如果加载失败，回退到主图标
@@ -63,9 +63,9 @@ export function createTray(): Tray {
   // 创建托盘菜单
   updateTrayMenu();
 
-  // 点击托盘图标显示设置页面
+  // 左键点击托盘图标也弹出菜单（与右键一致）
   tray.on('click', () => {
-    showSettingsWindow();
+    tray?.popUpContextMenu();
   });
 
   return tray;

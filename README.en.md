@@ -49,11 +49,13 @@ This is the desktop version of [Antigravity Quota Watcher](https://github.com/wu
 - **x64**: For Intel Macs
 - **arm64**: For Apple Silicon (M1/M2/M3) Macs
 
-After dragging to your Applications folder, since the app is unsigned, you may see a "Cannot Be Opened" warning on first launch. Run the following command in Terminal before opening:
+After dragging to your Applications folder, since the app is unsigned, you may see a "Applications is damaged, cannot open" warning on first launch. Run the following command in Terminal before opening:
 
 ```bash
 xattr -cr /Applications/AG-Quota-Watcher-Desktop.app
 ```
+
+Installation still has questions? Please refer to [this article](https://sysin.org/blog/macos-if-crashes-when-opening/).
 
 ### Linux
 

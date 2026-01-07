@@ -112,22 +112,22 @@ declare global {
       onQuotaUpdate: (callback: (data: { accountId: string; snapshot: QuotaSnapshot }) => void) => () => void;
       onQuotaError: (callback: (data: { accountId: string; error: string }) => void) => () => void;
       onQuotaStatus: (callback: (data: { status: string; retryCount?: number }) => void) => () => void;
-      onSettingsUpdate: (callback: (data: { 
-        settings: AppSettings; 
+      onSettingsUpdate: (callback: (data: {
+        settings: AppSettings;
         modelConfigs: Record<string, ModelConfig>;
         accountModelConfigs: AccountModelConfigs;
         selectedModels: SelectedModel[];
       }) => void) => () => void;
 
       // 设置相关
-      getSettings: () => Promise<{ 
-        settings: AppSettings; 
+      getSettings: () => Promise<{
+        settings: AppSettings;
         modelConfigs: Record<string, ModelConfig>;
         accountModelConfigs: AccountModelConfigs;
         selectedModels: SelectedModel[];
       }>;
-      saveSettings: (settings: { 
-        settings: AppSettings; 
+      saveSettings: (settings: {
+        settings: AppSettings;
         modelConfigs: Record<string, ModelConfig>;
         accountModelConfigs?: AccountModelConfigs;
         selectedModels?: SelectedModel[];

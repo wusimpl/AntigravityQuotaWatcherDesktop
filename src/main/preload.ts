@@ -130,14 +130,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // 设置更新监听
-  onSettingsUpdate: (callback: (data: { 
-    settings: AppSettings; 
+  onSettingsUpdate: (callback: (data: {
+    settings: AppSettings;
     modelConfigs: Record<string, ModelConfig>;
     accountModelConfigs: AccountModelConfigs;
     selectedModels: SelectedModel[];
   }) => void) => {
-    const handler = (_event: Electron.IpcRendererEvent, data: { 
-      settings: AppSettings; 
+    const handler = (_event: Electron.IpcRendererEvent, data: {
+      settings: AppSettings;
       modelConfigs: Record<string, ModelConfig>;
       accountModelConfigs: AccountModelConfigs;
       selectedModels: SelectedModel[];
@@ -148,8 +148,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // 设置相关
   getSettings: () => ipcRenderer.invoke('get-settings'),
-  saveSettings: (settings: { 
-    settings: AppSettings; 
+  saveSettings: (settings: {
+    settings: AppSettings;
     modelConfigs: Record<string, ModelConfig>;
     accountModelConfigs?: AccountModelConfigs;
     selectedModels?: SelectedModel[];
@@ -211,22 +211,22 @@ declare global {
       onQuotaUpdate: (callback: (data: { accountId: string; snapshot: QuotaSnapshot }) => void) => () => void;
       onQuotaError: (callback: (data: { accountId: string; error: string }) => void) => () => void;
       onQuotaStatus: (callback: (data: { status: string; retryCount?: number }) => void) => () => void;
-      onSettingsUpdate: (callback: (data: { 
-        settings: AppSettings; 
+      onSettingsUpdate: (callback: (data: {
+        settings: AppSettings;
         modelConfigs: Record<string, ModelConfig>;
         accountModelConfigs: AccountModelConfigs;
         selectedModels: SelectedModel[];
       }) => void) => () => void;
 
       // 设置相关
-      getSettings: () => Promise<{ 
-        settings: AppSettings; 
+      getSettings: () => Promise<{
+        settings: AppSettings;
         modelConfigs: Record<string, ModelConfig>;
         accountModelConfigs: AccountModelConfigs;
         selectedModels: SelectedModel[];
       }>;
-      saveSettings: (settings: { 
-        settings: AppSettings; 
+      saveSettings: (settings: {
+        settings: AppSettings;
         modelConfigs: Record<string, ModelConfig>;
         accountModelConfigs?: AccountModelConfigs;
         selectedModels?: SelectedModel[];

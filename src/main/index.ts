@@ -249,8 +249,8 @@ ipcMain.handle('get-settings', () => {
   };
 });
 
-ipcMain.handle('save-settings', async (_event, data: { 
-  settings: AppSettings; 
+ipcMain.handle('save-settings', async (_event, data: {
+  settings: AppSettings;
   modelConfigs: Record<string, ModelConfig>;
   accountModelConfigs?: AccountModelConfigs;
   selectedModels?: SelectedModel[];
@@ -293,9 +293,9 @@ ipcMain.handle('save-settings', async (_event, data: {
   // 广播设置更新
   const widgetWindow = getWidgetWindow();
   const settingsWindow = getSettingsWindow();
-  const updateData = { 
-    settings, 
-    modelConfigs, 
+  const updateData = {
+    settings,
+    modelConfigs,
     accountModelConfigs: store.get('accountModelConfigs'),
     selectedModels: store.get('selectedModels'),
   };
@@ -319,8 +319,8 @@ ipcMain.handle('save-model-configs', async (_event, configs: Record<string, Mode
   const widgetWindow = getWidgetWindow();
   const settingsWindow = getSettingsWindow();
 
-  const updateData = { 
-    settings, 
+  const updateData = {
+    settings,
     modelConfigs: configs,
     accountModelConfigs: store.get('accountModelConfigs'),
     selectedModels: store.get('selectedModels'),
@@ -345,8 +345,8 @@ ipcMain.handle('save-selected-models', async (_event, selectedModels: SelectedMo
   const widgetWindow = getWidgetWindow();
   const settingsWindow = getSettingsWindow();
 
-  const updateData = { 
-    settings, 
+  const updateData = {
+    settings,
     modelConfigs: store.get('modelConfigs'),
     accountModelConfigs: store.get('accountModelConfigs'),
     selectedModels,
