@@ -6,8 +6,13 @@ on:
       - 'v*'  # 推送 v 开头的 tag 时触发，如 v0.9.0
   workflow_dispatch:  # 支持手动触发
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
+    timeout-minutes: 30
     strategy:
       matrix:
         include:
@@ -35,6 +40,20 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Cache Electron & electron-builder
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/electron/Cache
+            ~/Library/Caches/electron
+            ~/.cache/electron
+            ~/AppData/Local/electron-builder/Cache
+            ~/Library/Caches/electron-builder
+            ~/.cache/electron-builder
+          key: electron-builder-${{ matrix.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            electron-builder-${{ matrix.os }}-
+
       - name: Install dependencies
         run: npm ci
 
@@ -49,13 +68,14 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}-v${{ steps.version.outputs.version }}
+          name: ${{ matrix.platform }}-v${{ steps.version.outputs.version }}
           path: |
             dist-electron/*.exe
             dist-electron/*.dmg
             dist-electron/*.AppImage
             dist-electron/*.deb
           if-no-files-found: ignore
+          overwrite: true
 
   release:
     needs: build
