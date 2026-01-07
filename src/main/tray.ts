@@ -62,14 +62,9 @@ export function createTray(): Tray {
   // 创建托盘菜单
   updateTrayMenu();
 
-  // 点击托盘图标切换悬浮窗
+  // 点击托盘图标显示设置页面
   tray.on('click', () => {
-    if (isWidgetVisible()) {
-      hideWidgetWindow();
-    } else {
-      showWidgetWindow();
-    }
-    updateTrayMenu();
+    showSettingsWindow();
   });
 
   return tray;
