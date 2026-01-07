@@ -19,6 +19,13 @@ interface AuthStateInfo {
   activeAccount?: AccountInfo;
 }
 
+// 登录流程状态类型
+interface LoginFlowInfo {
+  state: 'idle' | 'preparing' | 'opening_browser' | 'waiting_auth' | 'exchanging_token' | 'success' | 'error' | 'cancelled';
+  authUrl?: string;
+  error?: string;
+}
+
 // 配额快照类型
 interface QuotaSnapshot {
   timestamp: string;
@@ -155,6 +162,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // 认证相关
   login: () => ipcRenderer.invoke('google-login'),
+  loginCancel: () => ipcRenderer.invoke('google-login-cancel'),
+  getLoginFlowInfo: () => ipcRenderer.invoke('get-login-flow-info'),
+  onLoginFlowUpdate: (callback: (info: LoginFlowInfo) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, info: LoginFlowInfo) => callback(info);
+    ipcRenderer.on('login-flow-update', handler);
+    return () => ipcRenderer.removeListener('login-flow-update', handler);
+  },
   logout: (accountId?: string) => ipcRenderer.invoke('google-logout', accountId),
   getAccounts: () => ipcRenderer.invoke('get-accounts'),
   getActiveAccount: () => ipcRenderer.invoke('get-active-account'),
@@ -225,6 +239,9 @@ declare global {
 
       // 认证相关
       login: () => Promise<boolean>;
+      loginCancel: () => Promise<void>;
+      getLoginFlowInfo: () => Promise<LoginFlowInfo>;
+      onLoginFlowUpdate: (callback: (info: LoginFlowInfo) => void) => () => void;
       logout: (accountId?: string) => Promise<void>;
       getAccounts: () => Promise<AccountInfo[]>;
       getActiveAccount: () => Promise<AccountInfo | null>;

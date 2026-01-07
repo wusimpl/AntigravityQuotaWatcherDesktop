@@ -3,6 +3,7 @@
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { AppSettings, ModelConfig, SelectedModel, AccountModelConfigs, QuotaSnapshot } from '../../shared/types';
+import LoginDialog from './LoginDialog';
 
 // 独立的模型行组件，避免输入时父组件重渲染导致失焦
 interface ModelRowProps {
@@ -167,6 +168,7 @@ const SettingsPage: React.FC = () => {
   const [accounts, setAccounts] = useState<AccountInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   // 从 displayName 提取默认别名（取第一个单词）
   const getDefaultAlias = (displayName: string): string => {
@@ -373,17 +375,21 @@ const SettingsPage: React.FC = () => {
   const canSelectMore = selectedModels.length < 2;
 
   // 添加账户
-  const handleAddAccount = async () => {
-    try {
-      const success = await window.electronAPI?.login();
-      if (success) {
-        // 登录成功后，先刷新配额数据（获取模型列表），再加载设置
-        await window.electronAPI?.refreshQuota();
-        await loadSettings();
-      }
-    } catch (err) {
-      console.error('Failed to add account:', err);
-    }
+  const handleAddAccount = () => {
+    setShowLoginDialog(true);
+  };
+
+  // 登录成功回调
+  const handleLoginSuccess = async () => {
+    setShowLoginDialog(false);
+    // 登录成功后，先刷新配额数据（获取模型列表），再加载设置
+    await window.electronAPI?.refreshQuota();
+    await loadSettings();
+  };
+
+  // 关闭登录弹窗
+  const handleLoginDialogClose = () => {
+    setShowLoginDialog(false);
   };
 
   // 删除账户
@@ -429,6 +435,13 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="w-full h-full bg-gray-900 flex flex-col">
+      {/* 登录弹窗 */}
+      <LoginDialog
+        isOpen={showLoginDialog}
+        onClose={handleLoginDialogClose}
+        onSuccess={handleLoginSuccess}
+      />
+
       {/* 标题栏 */}
       <div className="drag-region flex items-center px-4 py-3 bg-gray-800 border-b border-gray-700">
         <span className="text-white font-medium">AG Quota 设置</span>

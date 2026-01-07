@@ -18,6 +18,13 @@ interface AuthStateInfo {
   activeAccount?: AccountInfo;
 }
 
+// 登录流程状态类型
+interface LoginFlowInfo {
+  state: 'idle' | 'preparing' | 'opening_browser' | 'waiting_auth' | 'exchanging_token' | 'success' | 'error' | 'cancelled';
+  authUrl?: string;
+  error?: string;
+}
+
 // 配额快照类型
 interface QuotaSnapshot {
   timestamp: string;
@@ -130,6 +137,9 @@ declare global {
 
       // 认证相关
       login: () => Promise<boolean>;
+      loginCancel: () => Promise<void>;
+      getLoginFlowInfo: () => Promise<LoginFlowInfo>;
+      onLoginFlowUpdate: (callback: (info: LoginFlowInfo) => void) => () => void;
       logout: (accountId?: string) => Promise<void>;
       getAccounts: () => Promise<AccountInfo[]>;
       getActiveAccount: () => Promise<AccountInfo | null>;

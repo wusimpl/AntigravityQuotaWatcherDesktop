@@ -26,6 +26,24 @@ export enum AuthState {
   ERROR = 'error',
 }
 
+// 登录流程状态（用于 UI 显示）
+export enum LoginFlowState {
+  IDLE = 'idle',
+  PREPARING = 'preparing',           // 准备中（启动回调服务器）
+  OPENING_BROWSER = 'opening_browser', // 正在打开浏览器
+  WAITING_AUTH = 'waiting_auth',     // 等待用户授权
+  EXCHANGING_TOKEN = 'exchanging_token', // 交换 Token
+  SUCCESS = 'success',               // 成功
+  ERROR = 'error',                   // 失败
+  CANCELLED = 'cancelled',           // 用户取消
+}
+
+export interface LoginFlowInfo {
+  state: LoginFlowState;
+  authUrl?: string;        // 授权 URL（用于手动复制）
+  error?: string;          // 错误信息
+}
+
 export interface AuthStateInfo {
   state: AuthState;
   error?: string;
@@ -55,6 +73,12 @@ export class GoogleAuthService {
   private currentState: AuthState = AuthState.NOT_AUTHENTICATED;
   private lastError: string | undefined;
   private stateChangeListeners: Set<(state: AuthStateInfo) => void> = new Set();
+  
+  // 登录流程状态
+  private loginFlowState: LoginFlowState = LoginFlowState.IDLE;
+  private currentAuthUrl: string | undefined;
+  private loginFlowListeners: Set<(info: LoginFlowInfo) => void> = new Set();
+  private loginCancelled = false;
 
   private constructor() {
     this.tokenStorage = TokenStorage.getInstance();
@@ -114,8 +138,11 @@ export class GoogleAuthService {
       return false;
     }
 
+    this.loginCancelled = false;
+
     try {
       this.setState(AuthState.AUTHENTICATING);
+      this.setLoginFlowState(LoginFlowState.PREPARING);
 
       // 生成 PKCE 和 state
       const state = crypto.randomBytes(32).toString('hex');
@@ -131,31 +158,63 @@ export class GoogleAuthService {
       const redirectUri = this.callbackServer.getRedirectUri();
       logger.log('[GoogleAuth] Callback server started, redirect URI:', redirectUri);
 
+      // 检查是否已取消
+      if (this.loginCancelled) {
+        throw new Error('Login cancelled by user');
+      }
+
       // 构建授权 URL
       const authUrl = this.buildAuthUrl(redirectUri, state, codeChallenge);
+      this.currentAuthUrl = authUrl;
       logger.log('[GoogleAuth] Auth URL built, opening browser...');
 
       // 开始等待回调
       const callbackPromise = this.callbackServer.waitForCallback(state);
 
+      // 更新状态为打开浏览器
+      this.setLoginFlowState(LoginFlowState.OPENING_BROWSER, authUrl);
+
       // 打开浏览器
+      let browserOpened = false;
       try {
         await shell.openExternal(authUrl);
+        browserOpened = true;
         logger.log('[GoogleAuth] Browser opened successfully');
       } catch (shellError) {
         logger.error('[GoogleAuth] shell.openExternal failed, trying fallback:', shellError);
         // Windows 备选方案
         if (process.platform === 'win32') {
-          exec(`start "" "${authUrl}"`);
-          logger.log('[GoogleAuth] Browser opened via exec fallback');
-        } else {
-          throw new Error(`Failed to open browser: ${shellError}`);
+          try {
+            exec(`start "" "${authUrl}"`);
+            browserOpened = true;
+            logger.log('[GoogleAuth] Browser opened via exec fallback');
+          } catch (execError) {
+            logger.error('[GoogleAuth] exec fallback also failed:', execError);
+          }
         }
+      }
+
+      // 无论浏览器是否打开成功，都进入等待授权状态（用户可以手动复制链接）
+      this.setLoginFlowState(LoginFlowState.WAITING_AUTH, authUrl);
+      if (!browserOpened) {
+        logger.warn('[GoogleAuth] Browser failed to open, user can manually copy the URL');
+      }
+
+      // 检查是否已取消
+      if (this.loginCancelled) {
+        throw new Error('Login cancelled by user');
       }
 
       // 等待回调
       const result = await callbackPromise;
+      
+      // 检查是否已取消
+      if (this.loginCancelled) {
+        throw new Error('Login cancelled by user');
+      }
+
       logger.log('[GoogleAuth] Received authorization code');
+      this.setLoginFlowState(LoginFlowState.EXCHANGING_TOKEN, authUrl);
 
       // 交换 Token
       const tokenData = await this.exchangeCodeForToken(
@@ -180,20 +239,93 @@ export class GoogleAuthService {
       this.tokenStorage.setActiveAccountId(account.id);
 
       this.setState(AuthState.AUTHENTICATED);
+      this.setLoginFlowState(LoginFlowState.SUCCESS);
       logger.log('[GoogleAuth] Login successful:', userInfo.email);
       return true;
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       logger.error('[GoogleAuth] Login failed:', errorMessage);
       this.lastError = errorMessage;
-      this.setState(AuthState.ERROR);
+      
+      if (this.loginCancelled) {
+        this.setLoginFlowState(LoginFlowState.CANCELLED);
+        // 取消时恢复之前的认证状态
+        const hasAccount = this.tokenStorage.hasAnyAccount();
+        this.setState(hasAccount ? AuthState.AUTHENTICATED : AuthState.NOT_AUTHENTICATED);
+      } else {
+        this.setState(AuthState.ERROR);
+        this.setLoginFlowState(LoginFlowState.ERROR, undefined, errorMessage);
+      }
       return false;
     } finally {
       if (this.callbackServer) {
         this.callbackServer.stop();
         this.callbackServer = null;
       }
+      this.currentAuthUrl = undefined;
     }
+  }
+
+  /**
+   * 取消登录流程
+   */
+  cancelLogin(): void {
+    logger.log('[GoogleAuth] Login cancelled by user');
+    this.loginCancelled = true;
+    
+    if (this.callbackServer) {
+      this.callbackServer.stop();
+      this.callbackServer = null;
+    }
+    
+    this.setLoginFlowState(LoginFlowState.CANCELLED);
+    
+    // 恢复之前的认证状态
+    const hasAccount = this.tokenStorage.hasAnyAccount();
+    this.setState(hasAccount ? AuthState.AUTHENTICATED : AuthState.NOT_AUTHENTICATED);
+  }
+
+  /**
+   * 获取当前登录流程状态
+   */
+  getLoginFlowInfo(): LoginFlowInfo {
+    return {
+      state: this.loginFlowState,
+      authUrl: this.currentAuthUrl,
+      error: this.lastError,
+    };
+  }
+
+  /**
+   * 监听登录流程状态变化
+   */
+  onLoginFlowChange(callback: (info: LoginFlowInfo) => void): () => void {
+    this.loginFlowListeners.add(callback);
+    return () => {
+      this.loginFlowListeners.delete(callback);
+    };
+  }
+
+  /**
+   * 设置登录流程状态并通知监听器
+   */
+  private setLoginFlowState(state: LoginFlowState, authUrl?: string, error?: string): void {
+    this.loginFlowState = state;
+    if (authUrl !== undefined) {
+      this.currentAuthUrl = authUrl;
+    }
+    if (error !== undefined) {
+      this.lastError = error;
+    }
+    
+    const info = this.getLoginFlowInfo();
+    this.loginFlowListeners.forEach((listener) => {
+      try {
+        listener(info);
+      } catch (e) {
+        logger.error('[GoogleAuth] Login flow listener error:', e);
+      }
+    });
   }
 
   /**

@@ -14,7 +14,7 @@ import {
   getSettingsWindow
 } from './window';
 import { createTray, updateTrayMenu } from './tray';
-import { GoogleAuthService, AuthState } from './auth';
+import { GoogleAuthService, AuthState, LoginFlowState } from './auth';
 import { QuotaService } from './quota';
 import { QuotaSnapshot, AppSettings, ModelConfig, SelectedModel, AccountModelConfigs } from '../shared/types';
 import { store } from './store';
@@ -70,6 +70,14 @@ if (!gotTheLock) {
         quotaService.stopPolling();
       }
     }, { signal: authStateListenerAbortController.signal });
+
+    // 监听登录流程状态变化，发送到设置窗口
+    authService.onLoginFlowChange((info) => {
+      const settingsWindow = getSettingsWindow();
+      if (settingsWindow && !settingsWindow.isDestroyed()) {
+        settingsWindow.webContents.send('login-flow-update', info);
+      }
+    });
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
@@ -147,6 +155,16 @@ ipcMain.handle('get-app-version', () => {
 // Google 登录
 ipcMain.handle('google-login', async () => {
   return authService.login();
+});
+
+// 取消登录
+ipcMain.handle('google-login-cancel', () => {
+  authService.cancelLogin();
+});
+
+// 获取登录流程状态
+ipcMain.handle('get-login-flow-info', () => {
+  return authService.getLoginFlowInfo();
 });
 
 // Google 登出
