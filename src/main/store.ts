@@ -33,7 +33,8 @@ const defaults: StoreSchema = {
     autoStart: false,
     notifications: true,
     showWidget: false,  // 默认不显示悬浮窗
-    widgetScale: 1,     // 默认缩放比例
+    widgetScale: 0.7,  // 默认缩放比例
+    waveSpeed: 5,  // 默认水波速度
     showResetTimeInWidget: true, // 默认显示重置时间
     showModelNameInWidget: true, // 默认显示模型名称
     showPercentageInWidget: true, // 默认显示剩余额度百分比

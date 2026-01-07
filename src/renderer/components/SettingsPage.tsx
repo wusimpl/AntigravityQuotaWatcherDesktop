@@ -158,6 +158,7 @@ const SettingsPage: React.FC = () => {
     notifications: true,
     showWidget: false,
     widgetScale: 1,
+    waveSpeed: 5,
     showResetTimeInWidget: true,
     showModelNameInWidget: true,
     showPercentageInWidget: true,
@@ -553,6 +554,36 @@ const SettingsPage: React.FC = () => {
                 <span>50%</span>
                 <span>100%</span>
                 <span>150%</span>
+              </div>
+            </div>
+
+            {/* 水波速度滑动条 */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">{t.settings.waveSpeed}</span>
+                <span className="text-sm text-gray-300">
+                  {(settings.waveSpeed ?? 5) === 0 
+                    ? t.settings.waveSpeedStill 
+                    : (settings.waveSpeed ?? 5) <= 3 
+                      ? t.settings.waveSpeedSlow 
+                      : (settings.waveSpeed ?? 5) <= 7 
+                        ? t.settings.waveSpeedMedium 
+                        : t.settings.waveSpeedFast}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={10}
+                step={1}
+                value={settings.waveSpeed ?? 5}
+                onChange={e => updateSetting('waveSpeed', parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>0</span>
+                <span>5</span>
+                <span>10</span>
               </div>
             </div>
 

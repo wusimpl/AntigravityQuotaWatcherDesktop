@@ -37,6 +37,7 @@ export interface AppSettings {
   notifications: boolean;     // 系统通知
   showWidget: boolean;        // 显示悬浮窗
   widgetScale: number;        // 悬浮窗缩放比例 (0.5-1.5)
+  waveSpeed: number;          // 水波速度 (0-10, 0=静止)
   showResetTimeInWidget: boolean; // 在悬浮窗显示重置时间
   showModelNameInWidget: boolean; // 在悬浮窗显示模型名称
   showPercentageInWidget: boolean; // 在悬浮窗显示剩余额度百分比

@@ -1,50 +1,96 @@
 /**
- * Widget 水箱波浪动画样式
+ * Widget 水箱波浪动画样式 - 适配胶囊形状
  */
 
-/* 波浪滚动动画 */
-@keyframes wave-scroll {
-  0% {
+/* 波浪水平移动动画 */
+@keyframes wave-move {
+  from {
     transform: translateX(0);
   }
-  100% {
+  to {
     transform: translateX(-50%);
   }
 }
 
-/* 波浪容器基础样式 */
-.wave-container {
+@-webkit-keyframes wave-move {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* 水箱容器 */
+.water-tank {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* 水体主体 */
+.water-tank .water-body {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.water-tank.blue .water-body {
+  background: rgba(96, 165, 250, 0.9);
+}
+
+.water-tank.orange .water-body {
+  background: rgba(251, 146, 60, 0.9);
+}
+
+/* 波浪层容器 */
+.water-tank .wave-layer {
   position: absolute;
   left: 0;
   width: 200%;
-  height: 100%;
-  display: flex;
-  background-repeat: repeat-x;
-  background-position: 0 bottom;
-  will-change: transform;
+  height: 14px;
+  transition: top 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, top;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
 }
 
-.wave-tile {
-  flex: 0 0 50%;
-  width: 50%;
-  height: 100%;
-}
-
-.wave-tile > svg {
-  display: block;
-}
-
-/* 后层波浪 - 移动较慢，透明度较低 */
-.wave-back {
-  animation: wave-scroll 12s linear infinite;
-  z-index: 1;
-  opacity: 0.5;
-}
-
-/* 前层波浪 - 移动较快，更清晰 */
-.wave-front {
-  animation: wave-scroll 9s linear infinite;
+/* 前景波浪 */
+.water-tank .wave-front {
   z-index: 2;
-  opacity: 0.8;
-  margin-left: -10px;
+}
+
+/* 后景波浪 */
+.water-tank .wave-back {
+  z-index: 1;
+  opacity: 0.6;
+}
+
+/* 波浪 SVG */
+.water-tank .wave-layer svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.water-tank.blue .wave-front svg {
+  fill: rgba(96, 165, 250, 0.95);
+}
+
+.water-tank.blue .wave-back svg {
+  fill: rgba(96, 165, 250, 0.5);
+}
+
+.water-tank.orange .wave-front svg {
+  fill: rgba(251, 146, 60, 0.95);
+}
+
+.water-tank.orange .wave-back svg {
+  fill: rgba(251, 146, 60, 0.5);
 }

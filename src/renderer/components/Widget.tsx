@@ -55,6 +55,7 @@ const Widget: React.FC = () => {
     notifications: true,
     showWidget: true,
     widgetScale: 1,
+    waveSpeed: 5,
     showResetTimeInWidget: true,
     showModelNameInWidget: true,
     showPercentageInWidget: true,
@@ -184,49 +185,55 @@ const Widget: React.FC = () => {
     </svg>
   );
 
-  // 水箱波浪组件
-  const WaterTank = ({ percentage, color }: { percentage: number; color: 'blue' | 'orange' }) => {
-    const translateY = 100 - Math.max(0, Math.min(100, percentage));
-    const colors = color === 'blue' 
-      ? { body: 'bg-blue-400', waveBack: 'fill-blue-400', waveFront: 'fill-blue-400' }
-      : { body: 'bg-orange-400', waveBack: 'fill-orange-400', waveFront: 'fill-orange-400' };
+  // 水箱波浪组件 - 适配胶囊形状的水平波浪
+  const WaterTank = ({ percentage, color, waveSpeed = 5 }: { percentage: number; color: 'blue' | 'orange'; waveSpeed?: number }) => {
+    // 计算波浪顶部位置
+    let topValue = 100 - Math.max(0, Math.min(100, percentage));
+    if (percentage > 95) topValue -= 10;
+
+    // 计算动画速度：waveSpeed 0=静止, 1-10 对应不同速度（防御：容错/钳制）
+    const speedRaw = typeof waveSpeed === 'number' && Number.isFinite(waveSpeed) ? waveSpeed : 5;
+    const speed = Math.max(0, Math.min(10, speedRaw));
+    const isStill = speed === 0;
+    const duration = (11 - speed) * 0.8; // 1->8s, 10->0.8s
+
+    // 波浪 SVG 路径（单段），渲染两段实现无缝滚动
+    const waveSegmentWidth = 360;
+    const waveViewHeight = 20;
+    const wavePath = "M0,6 C30,0 60,12 90,6 C120,0 150,12 180,6 C210,0 240,12 270,6 C300,0 330,12 360,6 L360,20 L0,20 Z";
+
+    const waveLayerStyle = (offset: number = 0): React.CSSProperties => ({
+      top: `${topValue + offset}%`,
+      animation: isStill ? 'none' : `wave-move ${duration}s linear infinite`,
+      animationPlayState: isStill ? 'paused' : 'running',
+    });
+
+    const waveBackStyle: React.CSSProperties = {
+      top: `${topValue - 2}%`,
+      animation: isStill ? 'none' : `wave-move ${duration * 1.5}s linear infinite reverse`,
+      animationPlayState: isStill ? 'paused' : 'running',
+    };
+
+    const waveSvg = (
+      <svg viewBox={`0 0 ${waveSegmentWidth * 2} ${waveViewHeight}`} preserveAspectRatio="none">
+        <path d={wavePath} />
+        <path d={wavePath} transform={`translate(${waveSegmentWidth} 0)`} />
+      </svg>
+    );
 
     return (
-      <div 
-        className="absolute bottom-0 left-0 w-full h-full transition-transform duration-700 ease-in-out"
-        style={{ transform: `translateY(${translateY}%)` }}
-      >
+      <div className={`water-tank ${color}`}>
         {/* 水体主体 */}
-        <div className={`absolute top-[10px] left-0 w-full h-[200%] ${colors.body}`} />  
-        
-        {/* 波浪层 */}
-        <div className="absolute top-0 w-full h-[20px]">
-          {/* 后层波浪 - 较慢 */}
-          <div className="wave-container wave-back">
-            <div className="wave-tile">
-              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className={`w-full h-full ${colors.waveBack}`}>
-                <path d="M0,0V46.29c47,0,116.29,48.27,243.32,48.27s196.32-48.27,333.32-48.27S833,96,960,96s240-48,240-48V0Z" transform="scale(1, -1) translate(0, -96)" />
-              </svg>
-            </div>
-            <div className="wave-tile">
-              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className={`w-full h-full ${colors.waveBack}`}>
-                <path d="M0,0V46.29c47,0,116.29,48.27,243.32,48.27s196.32-48.27,333.32-48.27S833,96,960,96s240-48,240-48V0Z" transform="scale(1, -1) translate(0, -96)" />
-              </svg>
-            </div>
-          </div>
-          {/* 前层波浪 - 较快 */}
-          <div className="wave-container wave-front">
-            <div className="wave-tile">
-              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className={`w-full h-full ${colors.waveFront}`}>
-                <path d="M0,0V46.29c47,0,116.29,48.27,243.32,48.27s196.32-48.27,333.32-48.27S833,96,960,96s240-48,240-48V0Z" transform="scale(1, -1) translate(0, -96)" />
-              </svg>
-            </div>
-            <div className="wave-tile">
-              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className={`w-full h-full ${colors.waveFront}`}>
-                <path d="M0,0V46.29c47,0,116.29,48.27,243.32,48.27s196.32-48.27,333.32-48.27S833,96,960,96s240-48,240-48V0Z" transform="scale(1, -1) translate(0, -96)" />
-              </svg>
-            </div>
-          </div>
+        <div className="water-body" style={{ top: `${topValue}%` }} />
+
+        {/* 后景波浪 */}
+        <div className="wave-layer wave-back" style={waveBackStyle}>
+          {waveSvg}
+        </div>
+
+        {/* 前景波浪 */}
+        <div className="wave-layer wave-front" style={waveLayerStyle()}>
+          {waveSvg}
         </div>
       </div>
     );
@@ -290,9 +297,9 @@ const Widget: React.FC = () => {
     return (
       <>
         {/* Left Section */}
-        <div className="relative flex-1 h-full flex flex-col items-center justify-center overflow-hidden">
+        <div className={`relative flex-1 h-full flex flex-col items-center justify-center overflow-hidden ${rightModel ? 'rounded-l-[43px] rounded-r-[0px]' : 'rounded-[43px]'}`}>
           {/* 水箱效果 */}
-          <WaterTank percentage={leftModel.remainingPercentage} color="blue" />
+          <WaterTank percentage={leftModel.remainingPercentage} color="blue" waveSpeed={settings.waveSpeed ?? 5} />
           
           {/* 内容层 */}
           <div className="relative z-10 flex flex-col items-center gap-0.5">
@@ -322,9 +329,9 @@ const Widget: React.FC = () => {
 
         {/* Right Section - 只在双模型时显示 */}
         {rightModel && rightColor && (
-          <div className="relative flex-1 h-full flex flex-col items-center justify-center overflow-hidden">
+          <div className="relative flex-1 h-full flex flex-col items-center justify-center overflow-hidden rounded-r-[43px] rounded-l-[0px]">
             {/* 水箱效果 */}
-            <WaterTank percentage={rightModel.remainingPercentage} color="orange" />
+            <WaterTank percentage={rightModel.remainingPercentage} color="orange" waveSpeed={settings.waveSpeed ?? 5} />
             
             {/* 内容层 */}
             <div className="relative z-10 flex flex-col items-center gap-0.5">
