@@ -18,20 +18,32 @@
   left: 0;
   width: 200%;
   height: 100%;
+  display: flex;
   background-repeat: repeat-x;
   background-position: 0 bottom;
+  will-change: transform;
+}
+
+.wave-tile {
+  flex: 0 0 50%;
+  width: 50%;
+  height: 100%;
+}
+
+.wave-tile > svg {
+  display: block;
 }
 
 /* 后层波浪 - 移动较慢，透明度较低 */
 .wave-back {
-  animation: wave-scroll 10s linear infinite;
+  animation: wave-scroll 12s linear infinite;
   z-index: 1;
   opacity: 0.5;
 }
 
 /* 前层波浪 - 移动较快，更清晰 */
 .wave-front {
-  animation: wave-scroll 7s linear infinite;
+  animation: wave-scroll 9s linear infinite;
   z-index: 2;
   opacity: 0.8;
   margin-left: -10px;

@@ -171,15 +171,29 @@ const Widget: React.FC = () => {
         <div className="absolute top-0 w-full h-[20px]">
           {/* 后层波浪 - 较慢 */}
           <div className="wave-container wave-back">
-            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className={`w-full h-full ${colors.waveBack}`}>
-              <path d="M0,0V46.29c47,0,116.29,48.27,243.32,48.27s196.32-48.27,333.32-48.27S833,96,960,96s240-48,240-48V0Z" transform="scale(1, -1) translate(0, -96)" />
-            </svg>
+            <div className="wave-tile">
+              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className={`w-full h-full ${colors.waveBack}`}>
+                <path d="M0,0V46.29c47,0,116.29,48.27,243.32,48.27s196.32-48.27,333.32-48.27S833,96,960,96s240-48,240-48V0Z" transform="scale(1, -1) translate(0, -96)" />
+              </svg>
+            </div>
+            <div className="wave-tile">
+              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className={`w-full h-full ${colors.waveBack}`}>
+                <path d="M0,0V46.29c47,0,116.29,48.27,243.32,48.27s196.32-48.27,333.32-48.27S833,96,960,96s240-48,240-48V0Z" transform="scale(1, -1) translate(0, -96)" />
+              </svg>
+            </div>
           </div>
           {/* 前层波浪 - 较快 */}
           <div className="wave-container wave-front">
-            <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className={`w-full h-full ${colors.waveFront}`}>
-              <path d="M0,0V46.29c47,0,116.29,48.27,243.32,48.27s196.32-48.27,333.32-48.27S833,96,960,96s240-48,240-48V0Z" transform="scale(1, -1) translate(0, -96)" />
-            </svg>
+            <div className="wave-tile">
+              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className={`w-full h-full ${colors.waveFront}`}>
+                <path d="M0,0V46.29c47,0,116.29,48.27,243.32,48.27s196.32-48.27,333.32-48.27S833,96,960,96s240-48,240-48V0Z" transform="scale(1, -1) translate(0, -96)" />
+              </svg>
+            </div>
+            <div className="wave-tile">
+              <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className={`w-full h-full ${colors.waveFront}`}>
+                <path d="M0,0V46.29c47,0,116.29,48.27,243.32,48.27s196.32-48.27,333.32-48.27S833,96,960,96s240-48,240-48V0Z" transform="scale(1, -1) translate(0, -96)" />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
