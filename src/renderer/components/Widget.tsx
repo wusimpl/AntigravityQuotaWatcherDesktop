@@ -349,7 +349,7 @@ const Widget: React.FC = () => {
         {/* Label: Binary Capsule (Bottom) */}
         <div className="absolute -bottom-8 left-0 right-0 text-center transition-opacity duration-300 opacity-0 group-hover:opacity-100 pointer-events-none">
           <span className="text-[9px] font-medium tracking-[0.3em] uppercase text-white/40 text-shadow-sm">
-            Binary Capsule
+            AG Quota Watcher
           </span>
         </div>
       </div>

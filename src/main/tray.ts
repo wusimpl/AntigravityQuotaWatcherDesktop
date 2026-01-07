@@ -116,7 +116,7 @@ export function updateTrayMenu(): void {
           type: 'info',
           title: '关于 AG Quota Watcher Desktop',
           message: 'AG Quota Watcher Desktop',
-          detail: `版本: ${app.getVersion()}\n\n监控 Google AI 模型配额的桌面应用`,
+          detail: `版本: ${app.getVersion()}\n\n监控 Google Antigravity AI 模型配额的桌面应用\n\n作者: @wusimpl`,
         });
       },
     },

@@ -701,8 +701,10 @@ const SettingsPage: React.FC = () => {
         </section>
 
         {/* 版本信息 */}
-        <section className="text-center text-xs text-gray-500 pb-4">
-          AG Quota Watcher Desktop
+        <section className="text-center text-xs text-gray-500 pb-4 space-y-1">
+          <div>AG Quota Watcher Desktop</div>
+          <div>监控 Google Antigravity AI 模型配额</div>
+          <div>作者: @wusimpl</div>
         </section>
       </div>
     </div>
