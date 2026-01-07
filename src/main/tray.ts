@@ -1,7 +1,7 @@
 /**
  * 系统托盘模块
  */
-import { Tray, Menu, app, nativeImage } from 'electron';
+import { Tray, Menu, app, nativeImage, dialog } from 'electron';
 import { 
   showWidgetWindow, 
   hideWidgetWindow, 
@@ -9,7 +9,7 @@ import {
   showSettingsWindow 
 } from './window';
 import { QuotaService } from './quota';
-import { store } from './store';
+import { logger } from './logger';
 
 let tray: Tray | null = null;
 
@@ -53,7 +53,7 @@ export function createTray(): Tray {
   const icon = createTrayIcon();
   
   tray = new Tray(icon);
-  tray.setToolTip('AG Quota Desktop');
+  tray.setToolTip('AG Quota Watcher Desktop');
 
   // 创建托盘菜单
   updateTrayMenu();
@@ -99,7 +99,7 @@ export function updateTrayMenu(): void {
           const quotaService = QuotaService.getInstance();
           await quotaService.refreshNow();
         } catch (err) {
-          console.error('[Tray] Refresh failed:', err);
+          logger.error('[Tray] Refresh failed:', err);
         }
       },
     },
@@ -113,11 +113,10 @@ export function updateTrayMenu(): void {
     {
       label: '关于',
       click: () => {
-        const { dialog } = require('electron');
         dialog.showMessageBox({
           type: 'info',
-          title: '关于 AG Quota Desktop',
-          message: 'AG Quota Desktop',
+          title: '关于 AG Quota Watcher Desktop',
+          message: 'AG Quota Watcher Desktop',
           detail: `版本: ${app.getVersion()}\n\n监控 Google AI 模型配额的桌面应用`,
         });
       },

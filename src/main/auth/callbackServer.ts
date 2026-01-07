@@ -4,6 +4,7 @@
  */
 import * as http from 'http';
 import { CALLBACK_HOST, CALLBACK_PATH, AUTH_TIMEOUT_MS } from './constants';
+import { logger } from '../logger';
 
 export interface CallbackResult {
   code: string;
@@ -13,6 +14,7 @@ export interface CallbackResult {
 export class CallbackServer {
   private server: http.Server | null = null;
   private port: number = 0;
+  private requestHandler: ((req: http.IncomingMessage, res: http.ServerResponse) => void) | null = null;
 
   getRedirectUri(): string {
     if (this.port === 0) throw new Error('Server not started');
@@ -21,13 +23,21 @@ export class CallbackServer {
 
   startServer(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.server = http.createServer();
+      // 创建服务器时传入请求处理函数，避免重复注册事件监听器
+      this.server = http.createServer((req, res) => {
+        if (this.requestHandler) {
+          this.requestHandler(req, res);
+        } else {
+          res.writeHead(503);
+          res.end('Service not ready');
+        }
+      });
 
       this.server.listen(0, CALLBACK_HOST, () => {
         const address = this.server!.address();
         if (typeof address === 'object' && address !== null) {
           this.port = address.port;
-          console.log(`[CallbackServer] Listening on port ${this.port}`);
+          logger.log(`[CallbackServer] Listening on port ${this.port}`);
           resolve();
         } else {
           reject(new Error('Failed to get server address'));
@@ -44,12 +54,24 @@ export class CallbackServer {
     }
 
     return new Promise((resolve, reject) => {
+      let isHandled = false;  // 防止重复处理
+
       const timeout = setTimeout(() => {
+        if (isHandled) return;
+        isHandled = true;
+        this.requestHandler = null;
         this.stop();
         reject(new Error('OAuth callback timeout'));
       }, AUTH_TIMEOUT_MS);
 
-      this.server!.on('request', (req, res) => {
+      // 设置请求处理函数（替换而非追加）
+      this.requestHandler = (req, res) => {
+        if (isHandled) {
+          res.writeHead(400);
+          res.end('Already processed');
+          return;
+        }
+
         const url = new URL(req.url || '', `http://${CALLBACK_HOST}`);
 
         if (url.pathname !== CALLBACK_PATH) {
@@ -63,7 +85,9 @@ export class CallbackServer {
         const error = url.searchParams.get('error');
         const errorDescription = url.searchParams.get('error_description');
 
+        isHandled = true;
         clearTimeout(timeout);
+        this.requestHandler = null;
 
         if (error) {
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -93,7 +117,7 @@ export class CallbackServer {
         res.end(this.getSuccessHtml());
         this.stop();
         resolve({ code, state });
-      });
+      };
     });
   }
 
@@ -111,7 +135,7 @@ export class CallbackServer {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录成功 - AG Quota Desktop</title>
+  <title>登录成功 - AG Quota Watcher Desktop</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -154,7 +178,7 @@ export class CallbackServer {
       </svg>
     </div>
     <h1>登录成功</h1>
-    <p>您可以关闭此页面并返回 AG Quota Desktop。</p>
+    <p>您可以关闭此页面并返回 AG Quota Watcher Desktop。</p>
     <p style="margin-top: 8px;">Login successful. You can close this page.</p>
   </div>
 </body>
@@ -167,7 +191,7 @@ export class CallbackServer {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>登录失败 - AG Quota Desktop</title>
+  <title>登录失败 - AG Quota Watcher Desktop</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {

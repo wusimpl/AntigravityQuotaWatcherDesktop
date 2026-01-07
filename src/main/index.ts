@@ -16,12 +16,16 @@ import {
 import { createTray, updateTrayMenu } from './tray';
 import { GoogleAuthService, AuthState } from './auth';
 import { QuotaService } from './quota';
-import { QuotaSnapshot, AppSettings, ModelConfig } from '../shared/types';
+import { QuotaSnapshot, AppSettings, ModelConfig, SelectedModel, AccountModelConfigs } from '../shared/types';
 import { store } from './store';
+import { logger } from './logger';
 
 // 服务实例
 const authService = GoogleAuthService.getInstance();
-const quotaService = QuotaService.getInstance({ pollingInterval: 60000 });
+const quotaService = QuotaService.getInstance({ pollingInterval: 60_000 });
+
+const authStateListenerAbortController = new AbortController();
+app.on('before-quit', () => authStateListenerAbortController.abort());
 
 // 单实例锁
 const gotTheLock = app.requestSingleInstanceLock();
@@ -65,7 +69,7 @@ if (!gotTheLock) {
       } else if (state.state === AuthState.NOT_AUTHENTICATED) {
         quotaService.stopPolling();
       }
-    });
+    }, { signal: authStateListenerAbortController.signal });
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
@@ -222,15 +226,29 @@ ipcMain.handle('get-settings', () => {
   return {
     settings: store.get('settings'),
     modelConfigs: store.get('modelConfigs'),
+    accountModelConfigs: store.get('accountModelConfigs'),
+    selectedModels: store.get('selectedModels'),
   };
 });
 
-ipcMain.handle('save-settings', async (_event, data: { settings: AppSettings; modelConfigs: Record<string, ModelConfig> }) => {
-  const { settings, modelConfigs } = data;
+ipcMain.handle('save-settings', async (_event, data: { 
+  settings: AppSettings; 
+  modelConfigs: Record<string, ModelConfig>;
+  accountModelConfigs?: AccountModelConfigs;
+  selectedModels?: SelectedModel[];
+}) => {
+  const { settings, modelConfigs, accountModelConfigs, selectedModels } = data;
+  const prevSettings = store.get('settings') as AppSettings;
 
   // 保存设置
   store.set('settings', settings);
   store.set('modelConfigs', modelConfigs);
+  if (accountModelConfigs !== undefined) {
+    store.set('accountModelConfigs', accountModelConfigs);
+  }
+  if (selectedModels !== undefined) {
+    store.set('selectedModels', selectedModels);
+  }
 
   // 应用轮询间隔
   quotaService.setPollingInterval(settings.pollingInterval * 1000);
@@ -242,21 +260,29 @@ ipcMain.handle('save-settings', async (_event, data: { settings: AppSettings; mo
   });
 
   // 应用悬浮窗显示设置
-  if (settings.showWidget) {
-    showWidgetWindow();
-  } else {
-    hideWidgetWindow();
+  if ((prevSettings?.showWidget ?? false) !== settings.showWidget) {
+    if (settings.showWidget) {
+      showWidgetWindow();
+    } else {
+      hideWidgetWindow();
+    }
   }
   updateTrayMenu();
 
   // 广播设置更新
   const widgetWindow = getWidgetWindow();
   const settingsWindow = getSettingsWindow();
+  const updateData = { 
+    settings, 
+    modelConfigs, 
+    accountModelConfigs: store.get('accountModelConfigs'),
+    selectedModels: store.get('selectedModels'),
+  };
   if (widgetWindow && !widgetWindow.isDestroyed()) {
-    widgetWindow.webContents.send('settings-update', { settings, modelConfigs });
+    widgetWindow.webContents.send('settings-update', updateData);
   }
   if (settingsWindow && !settingsWindow.isDestroyed()) {
-    settingsWindow.webContents.send('settings-update', { settings, modelConfigs });
+    settingsWindow.webContents.send('settings-update', updateData);
   }
 });
 
@@ -272,11 +298,43 @@ ipcMain.handle('save-model-configs', async (_event, configs: Record<string, Mode
   const widgetWindow = getWidgetWindow();
   const settingsWindow = getSettingsWindow();
 
+  const updateData = { 
+    settings, 
+    modelConfigs: configs,
+    accountModelConfigs: store.get('accountModelConfigs'),
+    selectedModels: store.get('selectedModels'),
+  };
   if (widgetWindow && !widgetWindow.isDestroyed()) {
-    widgetWindow.webContents.send('settings-update', { settings, modelConfigs: configs });
+    widgetWindow.webContents.send('settings-update', updateData);
   }
   if (settingsWindow && !settingsWindow.isDestroyed()) {
-    settingsWindow.webContents.send('settings-update', { settings, modelConfigs: configs });
+    settingsWindow.webContents.send('settings-update', updateData);
+  }
+});
+
+ipcMain.handle('get-selected-models', () => {
+  return store.get('selectedModels');
+});
+
+ipcMain.handle('save-selected-models', async (_event, selectedModels: SelectedModel[]) => {
+  store.set('selectedModels', selectedModels);
+
+  // 广播设置更新
+  const settings = store.get('settings');
+  const widgetWindow = getWidgetWindow();
+  const settingsWindow = getSettingsWindow();
+
+  const updateData = { 
+    settings, 
+    modelConfigs: store.get('modelConfigs'),
+    accountModelConfigs: store.get('accountModelConfigs'),
+    selectedModels,
+  };
+  if (widgetWindow && !widgetWindow.isDestroyed()) {
+    widgetWindow.webContents.send('settings-update', updateData);
+  }
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.webContents.send('settings-update', updateData);
   }
 });
 
@@ -307,7 +365,7 @@ function setupQuotaService(): void {
 
   // 错误回调
   quotaService.onError((accountId: string, error: Error) => {
-    console.error(`[Main] Quota error for ${accountId}:`, error.message);
+    logger.error(`[Main] Quota error for ${accountId}:`, error.message);
     const widgetWindow = getWidgetWindow();
     const settingsWindow = getSettingsWindow();
 

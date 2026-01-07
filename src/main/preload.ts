@@ -48,6 +48,15 @@ interface ModelConfig {
   order: number;
 }
 
+// 选中的模型类型
+interface SelectedModel {
+  accountId: string;
+  modelId: string;
+}
+
+// 账户模型配置类型
+type AccountModelConfigs = Record<string, Record<string, ModelConfig>>;
+
 // 应用设置类型
 interface AppSettings {
   pollingInterval: number;
@@ -56,6 +65,7 @@ interface AppSettings {
   autoStart: boolean;
   notifications: boolean;
   showWidget: boolean;
+  widgetScale: number;
   language: 'auto' | 'zh-CN' | 'en';
 }
 
@@ -96,26 +106,51 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // 配额事件监听
   onQuotaUpdate: (callback: (data: { accountId: string; snapshot: QuotaSnapshot }) => void) => {
-    ipcRenderer.on('quota-update', (_event, data) => callback(data));
+    const handler = (_event: Electron.IpcRendererEvent, data: { accountId: string; snapshot: QuotaSnapshot }) => callback(data);
+    ipcRenderer.on('quota-update', handler);
+    // 返回取消订阅函数
+    return () => ipcRenderer.removeListener('quota-update', handler);
   },
   onQuotaError: (callback: (data: { accountId: string; error: string }) => void) => {
-    ipcRenderer.on('quota-error', (_event, data) => callback(data));
+    const handler = (_event: Electron.IpcRendererEvent, data: { accountId: string; error: string }) => callback(data);
+    ipcRenderer.on('quota-error', handler);
+    return () => ipcRenderer.removeListener('quota-error', handler);
   },
   onQuotaStatus: (callback: (data: { status: string; retryCount?: number }) => void) => {
-    ipcRenderer.on('quota-status', (_event, data) => callback(data));
+    const handler = (_event: Electron.IpcRendererEvent, data: { status: string; retryCount?: number }) => callback(data);
+    ipcRenderer.on('quota-status', handler);
+    return () => ipcRenderer.removeListener('quota-status', handler);
   },
 
   // 设置更新监听
-  onSettingsUpdate: (callback: (data: { settings: AppSettings; modelConfigs: Record<string, ModelConfig> }) => void) => {
-    ipcRenderer.on('settings-update', (_event, data) => callback(data));
+  onSettingsUpdate: (callback: (data: { 
+    settings: AppSettings; 
+    modelConfigs: Record<string, ModelConfig>;
+    accountModelConfigs: AccountModelConfigs;
+    selectedModels: SelectedModel[];
+  }) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, data: { 
+      settings: AppSettings; 
+      modelConfigs: Record<string, ModelConfig>;
+      accountModelConfigs: AccountModelConfigs;
+      selectedModels: SelectedModel[];
+    }) => callback(data);
+    ipcRenderer.on('settings-update', handler);
+    return () => ipcRenderer.removeListener('settings-update', handler);
   },
 
   // 设置相关
   getSettings: () => ipcRenderer.invoke('get-settings'),
-  saveSettings: (settings: { settings: AppSettings; modelConfigs: Record<string, ModelConfig> }) =>
-    ipcRenderer.invoke('save-settings', settings),
+  saveSettings: (settings: { 
+    settings: AppSettings; 
+    modelConfigs: Record<string, ModelConfig>;
+    accountModelConfigs?: AccountModelConfigs;
+    selectedModels?: SelectedModel[];
+  }) => ipcRenderer.invoke('save-settings', settings),
   getModelConfigs: () => ipcRenderer.invoke('get-model-configs'),
   saveModelConfigs: (configs: Record<string, ModelConfig>) => ipcRenderer.invoke('save-model-configs', configs),
+  getSelectedModels: () => ipcRenderer.invoke('get-selected-models'),
+  saveSelectedModels: (selectedModels: SelectedModel[]) => ipcRenderer.invoke('save-selected-models', selectedModels),
   setAutoStart: (enabled: boolean) => ipcRenderer.invoke('set-auto-start', enabled),
 
   // 认证相关
@@ -159,16 +194,33 @@ declare global {
       startPolling: () => Promise<void>;
       stopPolling: () => Promise<void>;
       getAvailableModels: () => Promise<ModelInfo[]>;
-      onQuotaUpdate: (callback: (data: { accountId: string; snapshot: QuotaSnapshot }) => void) => void;
-      onQuotaError: (callback: (data: { accountId: string; error: string }) => void) => void;
-      onQuotaStatus: (callback: (data: { status: string; retryCount?: number }) => void) => void;
-      onSettingsUpdate: (callback: (data: { settings: AppSettings; modelConfigs: Record<string, ModelConfig> }) => void) => void;
+      onQuotaUpdate: (callback: (data: { accountId: string; snapshot: QuotaSnapshot }) => void) => () => void;
+      onQuotaError: (callback: (data: { accountId: string; error: string }) => void) => () => void;
+      onQuotaStatus: (callback: (data: { status: string; retryCount?: number }) => void) => () => void;
+      onSettingsUpdate: (callback: (data: { 
+        settings: AppSettings; 
+        modelConfigs: Record<string, ModelConfig>;
+        accountModelConfigs: AccountModelConfigs;
+        selectedModels: SelectedModel[];
+      }) => void) => () => void;
 
       // 设置相关
-      getSettings: () => Promise<{ settings: AppSettings; modelConfigs: Record<string, ModelConfig> }>;
-      saveSettings: (settings: { settings: AppSettings; modelConfigs: Record<string, ModelConfig> }) => Promise<void>;
+      getSettings: () => Promise<{ 
+        settings: AppSettings; 
+        modelConfigs: Record<string, ModelConfig>;
+        accountModelConfigs: AccountModelConfigs;
+        selectedModels: SelectedModel[];
+      }>;
+      saveSettings: (settings: { 
+        settings: AppSettings; 
+        modelConfigs: Record<string, ModelConfig>;
+        accountModelConfigs?: AccountModelConfigs;
+        selectedModels?: SelectedModel[];
+      }) => Promise<void>;
       getModelConfigs: () => Promise<Record<string, ModelConfig>>;
       saveModelConfigs: (configs: Record<string, ModelConfig>) => Promise<void>;
+      getSelectedModels: () => Promise<SelectedModel[]>;
+      saveSelectedModels: (selectedModels: SelectedModel[]) => Promise<void>;
       setAutoStart: (enabled: boolean) => Promise<void>;
 
       // 认证相关

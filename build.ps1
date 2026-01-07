@@ -1,4 +1,4 @@
-# AG Quota Desktop Build Script
+# AG Quota Watcher Desktop Build Script
 # Usage: .\build.ps1 [-Clean] [-SkipInstall]
 
 param(
@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "=== AG Quota Desktop Build Script ===" -ForegroundColor Cyan
+Write-Host "=== AG Quota Watcher Desktop Build Script ===" -ForegroundColor Cyan
 
 # Clean build directories
 if ($Clean) {

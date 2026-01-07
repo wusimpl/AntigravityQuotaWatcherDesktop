@@ -1,7 +1,7 @@
 {
-  "name": "ag-quota-desktop",
+  "name": "ag-quota-watcher-desktop",
   "version": "0.1.0",
-  "description": "AG Quota Desktop - AI 模型配额监控桌面应用",
+  "description": "AG Quota Watcher Desktop - AI 模型配额监控桌面应用",
   "main": "dist/main/main/index.js",
   "author": "wusimpl",
   "license": "GPL-3.0",
@@ -43,8 +43,8 @@
     "vite": "^5.0.10"
   },
   "build": {
-    "appId": "com.agquota.desktop",
-    "productName": "AGQuotaDesktop",
+    "appId": "com.agquota.watcher.desktop",
+    "productName": "AG Quota Watcher Desktop",
     "directories": {
       "output": "dist-electron"
     },

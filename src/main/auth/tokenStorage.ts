@@ -5,6 +5,9 @@
 import Store from 'electron-store';
 import { safeStorage } from 'electron';
 import { TOKEN_STORAGE_KEY, ACCOUNTS_STORAGE_KEY } from './constants';
+import { logger } from '../logger';
+
+const DEFAULT_TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000;
 
 /**
  * OAuth Token 数据结构
@@ -86,7 +89,7 @@ export class TokenStorage {
   /**
    * 保存 Token
    */
-  async saveToken(accountId: string, token: TokenData): Promise<void> {
+  saveToken(accountId: string, token: TokenData): void {
     const tokens = this.store.get(TOKEN_STORAGE_KEY, {});
     const encrypted = this.encrypt(JSON.stringify(token));
     tokens[accountId] = encrypted;
@@ -96,7 +99,7 @@ export class TokenStorage {
   /**
    * 获取 Token
    */
-  async getToken(accountId: string): Promise<TokenData | null> {
+  getToken(accountId: string): TokenData | null {
     const tokens = this.store.get(TOKEN_STORAGE_KEY, {});
     const encrypted = tokens[accountId];
     if (!encrypted) return null;
@@ -105,7 +108,7 @@ export class TokenStorage {
       const decrypted = this.decrypt(encrypted);
       return JSON.parse(decrypted) as TokenData;
     } catch (e) {
-      console.error('[TokenStorage] Failed to decrypt token:', e);
+      logger.error('[TokenStorage] Failed to decrypt token:', e);
       return null;
     }
   }
@@ -113,7 +116,7 @@ export class TokenStorage {
   /**
    * 删除 Token
    */
-  async deleteToken(accountId: string): Promise<void> {
+  deleteToken(accountId: string): void {
     const tokens = this.store.get(TOKEN_STORAGE_KEY, {});
     delete tokens[accountId];
     this.store.set(TOKEN_STORAGE_KEY, tokens);
@@ -121,9 +124,10 @@ export class TokenStorage {
 
   /**
    * 检查 Token 是否过期
+   * @param bufferMs 提前刷新的缓冲时间，默认 5 分钟
    */
-  async isTokenExpired(accountId: string, bufferMs: number = 5 * 60 * 1000): Promise<boolean> {
-    const token = await this.getToken(accountId);
+  isTokenExpired(accountId: string, bufferMs: number = DEFAULT_TOKEN_EXPIRY_BUFFER_MS): boolean {
+    const token = this.getToken(accountId);
     if (!token) return true;
     return Date.now() + bufferMs >= token.expiresAt;
   }
@@ -131,13 +135,13 @@ export class TokenStorage {
   /**
    * 更新 Access Token
    */
-  async updateAccessToken(accountId: string, accessToken: string, expiresIn: number): Promise<void> {
-    const token = await this.getToken(accountId);
+  updateAccessToken(accountId: string, accessToken: string, expiresIn: number): void {
+    const token = this.getToken(accountId);
     if (!token) throw new Error('No existing token to update');
 
     token.accessToken = accessToken;
     token.expiresAt = Date.now() + expiresIn * 1000;
-    await this.saveToken(accountId, token);
+    this.saveToken(accountId, token);
   }
 
   // ========== 账户管理 ==========
@@ -145,7 +149,7 @@ export class TokenStorage {
   /**
    * 保存账户信息
    */
-  async saveAccount(account: AccountData): Promise<void> {
+  saveAccount(account: AccountData): void {
     const accounts = this.store.get(ACCOUNTS_STORAGE_KEY, []);
     const index = accounts.findIndex(a => a.id === account.id);
     if (index >= 0) {
@@ -159,18 +163,18 @@ export class TokenStorage {
   /**
    * 获取所有账户
    */
-  async getAccounts(): Promise<AccountData[]> {
+  getAccounts(): AccountData[] {
     return this.store.get(ACCOUNTS_STORAGE_KEY, []);
   }
 
   /**
    * 删除账户
    */
-  async deleteAccount(accountId: string): Promise<void> {
+  deleteAccount(accountId: string): void {
     const accounts = this.store.get(ACCOUNTS_STORAGE_KEY, []);
     const filtered = accounts.filter(a => a.id !== accountId);
     this.store.set(ACCOUNTS_STORAGE_KEY, filtered);
-    await this.deleteToken(accountId);
+    this.deleteToken(accountId);
 
     // 如果删除的是当前活跃账户，切换到第一个
     if (this.getActiveAccountId() === accountId) {
@@ -195,8 +199,8 @@ export class TokenStorage {
   /**
    * 检查是否有任何账户
    */
-  async hasAnyAccount(): Promise<boolean> {
-    const accounts = await this.getAccounts();
+  hasAnyAccount(): boolean {
+    const accounts = this.getAccounts();
     return accounts.length > 0;
   }
 }

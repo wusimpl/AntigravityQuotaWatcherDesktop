@@ -10,7 +10,13 @@ import {
   API_TIMEOUT_MS,
   MAX_RETRIES,
   RETRY_DELAY_MS,
+  DEFAULT_PROJECT_ID,
 } from '../constants';
+
+const DEBUG_ENABLED = process.env.AG_QUOTA_DEBUG === '1';
+const debugLog = (...args: unknown[]): void => {
+  if (DEBUG_ENABLED) console.log(...args);
+};
 
 /**
  * 项目信息 (loadCodeAssist 响应)
@@ -82,11 +88,11 @@ export class GoogleCloudCodeClient {
    * 获取项目信息和订阅等级
    */
   async loadProjectInfo(accessToken: string): Promise<ProjectInfo> {
-    console.log('[GoogleAPI] loadProjectInfo: Sending request...');
+    debugLog('[GoogleAPI] loadProjectInfo: Sending request...');
     const requestBody = {
       metadata: { ideType: 'ANTIGRAVITY' }
     };
-    console.log('[GoogleAPI] loadProjectInfo: Request body:', JSON.stringify(requestBody));
+    debugLog('[GoogleAPI] loadProjectInfo: Request body:', JSON.stringify(requestBody));
 
     const response = await this.makeApiRequest(
       LOAD_CODE_ASSIST_PATH,
@@ -94,7 +100,7 @@ export class GoogleCloudCodeClient {
       requestBody
     );
 
-    console.log('[GoogleAPI] loadProjectInfo: Raw response:', JSON.stringify(response));
+    debugLog('[GoogleAPI] loadProjectInfo: Raw response:', JSON.stringify(response));
 
     const paidTier = (response.paidTier || {}) as Record<string, unknown>;
     const currentTier = (response.currentTier || {}) as Record<string, unknown>;
@@ -104,7 +110,7 @@ export class GoogleCloudCodeClient {
       projectId: (response.cloudaicompanionProject as string) || '',
       tier,
     };
-    console.log('[GoogleAPI] loadProjectInfo: Parsed result:', JSON.stringify(result));
+    debugLog('[GoogleAPI] loadProjectInfo: Parsed result:', JSON.stringify(result));
 
     return result;
   }
@@ -116,10 +122,15 @@ export class GoogleCloudCodeClient {
     accessToken: string,
     projectId?: string
   ): Promise<ModelsQuotaResponse> {
+    const effectiveProjectId = projectId || DEFAULT_PROJECT_ID;
+    if (!effectiveProjectId) {
+      throw new Error('Missing projectId (ensure loadProjectInfo returns it, or set AG_QUOTA_DEFAULT_PROJECT_ID)');
+    }
+
     const body = {
-      project: projectId || 'bamboo-precept-lgxtn'
+      project: effectiveProjectId,
     };
-    console.log('[GoogleAPI] fetchModelsQuota: Request body:', JSON.stringify(body));
+    debugLog('[GoogleAPI] fetchModelsQuota: Request body:', JSON.stringify(body));
 
     const response = await this.makeApiRequest(
       FETCH_AVAILABLE_MODELS_PATH,
@@ -127,36 +138,36 @@ export class GoogleCloudCodeClient {
       body
     );
 
-    console.log('[GoogleAPI] fetchModelsQuota: Raw response keys:', Object.keys(response));
+    debugLog('[GoogleAPI] fetchModelsQuota: Raw response keys:', Object.keys(response));
 
     const modelsMap = response.models || {};
     const modelNames = Object.keys(modelsMap);
-    console.log('[GoogleAPI] fetchModelsQuota: Found models in response:', modelNames.join(', ') || '(none)');
+    debugLog('[GoogleAPI] fetchModelsQuota: Found models in response:', modelNames.join(', ') || '(none)');
 
     const models: ModelQuotaFromApi[] = [];
     const allowedModelPatterns = /gemini|claude|gpt/i;
 
     for (const [modelName, modelInfo] of Object.entries(modelsMap)) {
       if (!allowedModelPatterns.test(modelName)) {
-        console.log(`[GoogleAPI] fetchModelsQuota: Model "${modelName}" filtered out (not gemini/claude/gpt)`);
+        debugLog(`[GoogleAPI] fetchModelsQuota: Model "${modelName}" filtered out (not gemini/claude/gpt)`);
         continue;
       }
       if (!this.isModelVersionSupported(modelName)) {
-        console.log(`[GoogleAPI] fetchModelsQuota: Model "${modelName}" filtered out (Gemini version < 3.0)`);
+        debugLog(`[GoogleAPI] fetchModelsQuota: Model "${modelName}" filtered out (Gemini version < 3.0)`);
         continue;
       }
 
       const info = modelInfo as Record<string, unknown>;
       if (info.quotaInfo) {
         const parsed = this.parseModelQuota(modelName, info);
-        console.log(`[GoogleAPI] fetchModelsQuota: Model "${modelName}" -> remaining: ${parsed.remainingQuota * 100}%`);
+        debugLog(`[GoogleAPI] fetchModelsQuota: Model "${modelName}" -> remaining: ${parsed.remainingQuota * 100}%`);
         models.push(parsed);
       } else {
-        console.log(`[GoogleAPI] fetchModelsQuota: Model "${modelName}" has no quotaInfo, skipping`);
+        debugLog(`[GoogleAPI] fetchModelsQuota: Model "${modelName}" has no quotaInfo, skipping`);
       }
     }
 
-    console.log('[GoogleAPI] fetchModelsQuota: Total models with quota:', models.length);
+    debugLog('[GoogleAPI] fetchModelsQuota: Total models with quota:', models.length);
     return { models };
   }
 
@@ -199,24 +210,24 @@ export class GoogleCloudCodeClient {
     body: object
   ): Promise<Record<string, unknown>> {
     let lastError: Error | null = null;
-    console.log(`[GoogleAPI] makeApiRequest: ${path} (max retries: ${MAX_RETRIES})`);
+    debugLog(`[GoogleAPI] makeApiRequest: ${path} (max retries: ${MAX_RETRIES})`);
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
-        console.log(`[GoogleAPI] makeApiRequest: Attempt ${attempt + 1}/${MAX_RETRIES}`);
+        debugLog(`[GoogleAPI] makeApiRequest: Attempt ${attempt + 1}/${MAX_RETRIES}`);
         return await this.doRequest(path, accessToken, body);
       } catch (e) {
         lastError = e as Error;
         console.error(`[GoogleAPI] makeApiRequest: Attempt ${attempt + 1} failed:`, lastError.message);
 
         if (e instanceof GoogleApiError) {
-          console.log(`[GoogleAPI] makeApiRequest: GoogleApiError - status: ${e.statusCode}, retryable: ${e.isRetryable()}, needsReauth: ${e.needsReauth()}`);
+          debugLog(`[GoogleAPI] makeApiRequest: GoogleApiError - status: ${e.statusCode}, retryable: ${e.isRetryable()}, needsReauth: ${e.needsReauth()}`);
           if (!e.isRetryable() || e.needsReauth()) throw e;
         }
 
         if (attempt < MAX_RETRIES - 1) {
           const delay = RETRY_DELAY_MS * (attempt + 1);
-          console.log(`[GoogleAPI] makeApiRequest: Waiting ${delay}ms before retry...`);
+          debugLog(`[GoogleAPI] makeApiRequest: Waiting ${delay}ms before retry...`);
           await this.delay(delay);
         }
       }
@@ -235,9 +246,9 @@ export class GoogleCloudCodeClient {
       const url = new URL(CLOUD_CODE_API_BASE);
       const postData = JSON.stringify(body);
 
-      console.log(`[GoogleAPI] doRequest: POST ${url.hostname}${path}`);
-      console.log(`[GoogleAPI] doRequest: Body length: ${postData.length} bytes`);
-      console.log(`[GoogleAPI] doRequest: Token: ${this.maskToken(accessToken)}`);
+      debugLog(`[GoogleAPI] doRequest: POST ${url.hostname}${path}`);
+      debugLog(`[GoogleAPI] doRequest: Body length: ${postData.length} bytes`);
+      debugLog(`[GoogleAPI] doRequest: Token length: ${accessToken.length}`);
 
       const options: https.RequestOptions = {
         hostname: url.hostname,
@@ -255,16 +266,16 @@ export class GoogleCloudCodeClient {
 
       const req = https.request(options, (res) => {
         let data = '';
-        console.log(`[GoogleAPI] doRequest: Response status: ${res.statusCode}`);
+        debugLog(`[GoogleAPI] doRequest: Response status: ${res.statusCode}`);
 
         res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
-          console.log(`[GoogleAPI] doRequest: Response body length: ${data.length} bytes`);
+          debugLog(`[GoogleAPI] doRequest: Response body length: ${data.length} bytes`);
 
           if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
             try {
               const response = JSON.parse(data);
-              console.log('[GoogleAPI] doRequest: Success');
+              debugLog('[GoogleAPI] doRequest: Success');
               resolve(response);
             } catch {
               console.error('[GoogleAPI] doRequest: Failed to parse JSON response');

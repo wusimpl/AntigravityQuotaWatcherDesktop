@@ -1,4 +1,4 @@
-# AG Quota Desktop - 项目计划书
+# AG Quota Watcher Desktop - 项目计划书
 
 ## 一、项目背景
 
@@ -155,7 +155,7 @@
 ### 3.4 项目结构
 
 ```
-ag-quota-desktop/
+ag-quota-watcher-desktop/
 ├── src/
 │   ├── main/                 # Electron 主进程
 │   │   ├── index.ts          # 主进程入口

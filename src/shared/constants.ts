@@ -36,5 +36,5 @@ export const API_TIMEOUT_MS = 10000;   // 10 秒
 export const MAX_RETRIES = 3;
 export const RETRY_DELAY_MS = 1000;
 
-// 默认项目 ID
-export const DEFAULT_PROJECT_ID = 'bamboo-precept-lgxtn';
+// 默认项目 ID（可通过环境变量覆盖，避免硬编码）
+export const DEFAULT_PROJECT_ID = process.env.AG_QUOTA_DEFAULT_PROJECT_ID;

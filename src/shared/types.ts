@@ -36,6 +36,7 @@ export interface AppSettings {
   autoStart: boolean;         // 开机自启
   notifications: boolean;     // 系统通知
   showWidget: boolean;        // 显示悬浮窗
+  widgetScale: number;        // 悬浮窗缩放比例 (0.5-1.5)
   language: 'auto' | 'zh-CN' | 'en';
 }
 
@@ -45,6 +46,15 @@ export interface ModelConfig {
   alias: string;
   order: number;
 }
+
+// 选中的模型（用于悬浮窗显示）
+export interface SelectedModel {
+  accountId: string;
+  modelId: string;
+}
+
+// 账户模型配置（每个账户独立的模型配置）
+export type AccountModelConfigs = Record<string, Record<string, ModelConfig>>;
 
 // 配额等级
 export enum QuotaLevel {

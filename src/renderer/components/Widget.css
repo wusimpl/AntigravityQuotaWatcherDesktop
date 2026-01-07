@@ -1,0 +1,38 @@
+/**
+ * Widget 水箱波浪动画样式
+ */
+
+/* 波浪滚动动画 */
+@keyframes wave-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* 波浪容器基础样式 */
+.wave-container {
+  position: absolute;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background-repeat: repeat-x;
+  background-position: 0 bottom;
+}
+
+/* 后层波浪 - 移动较慢，透明度较低 */
+.wave-back {
+  animation: wave-scroll 10s linear infinite;
+  z-index: 1;
+  opacity: 0.5;
+}
+
+/* 前层波浪 - 移动较快，更清晰 */
+.wave-front {
+  animation: wave-scroll 7s linear infinite;
+  z-index: 2;
+  opacity: 0.8;
+  margin-left: -10px;
+}

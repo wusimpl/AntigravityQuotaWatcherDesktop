@@ -94,7 +94,7 @@ export async function createSettingsWindow(): Promise<BrowserWindow> {
   }
 
   const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
-  const windowWidth = 480;
+  const windowWidth = 580;
   const windowHeight = 600;
 
   settingsWindow = new BrowserWindow({
