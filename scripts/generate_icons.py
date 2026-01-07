@@ -6,6 +6,25 @@ from PIL import Image
 SOURCE_IMAGE_PATH = r"C:/Users/Administrator/.gemini/antigravity/brain/d9fce87b-7355-4ee5-a487-4f6c2c186145/ag_simple_capsule_1767751839629.png"
 RESOURCES_DIR = r"c:/Users/Administrator/code/ag-quota-desktop/resources"
 
+def remove_white_background(img, threshold=240):
+    """
+    将白色/近白色背景转换为透明。
+    threshold: RGB 值高于此阈值的像素被视为"白色"并设为透明。
+    """
+    img = img.convert('RGBA')
+    data = img.getdata()
+    
+    new_data = []
+    for item in data:
+        # 如果 R, G, B 都接近白色（高于阈值），则设为透明
+        if item[0] > threshold and item[1] > threshold and item[2] > threshold:
+            new_data.append((255, 255, 255, 0))  # 完全透明
+        else:
+            new_data.append(item)
+    
+    img.putdata(new_data)
+    return img
+
 def generate_icons():
     if not os.path.exists(SOURCE_IMAGE_PATH):
         print(f"Error: Source image not found at {SOURCE_IMAGE_PATH}")
@@ -17,11 +36,15 @@ def generate_icons():
 
     try:
         img = Image.open(SOURCE_IMAGE_PATH)
-        print(f"Loaded image: {img.size} {img.format}")
+        print(f"Loaded image: {img.size} {img.format} {img.mode}")
 
         # Ensure RGBA
         if img.mode != 'RGBA':
             img = img.convert('RGBA')
+        
+        # 移除白色背景（使其透明）
+        img = remove_white_background(img)
+        print("Removed white background (converted to transparent)")
 
         # 1. Generate icon.ico for Windows
         # Sizes recommended for Windows

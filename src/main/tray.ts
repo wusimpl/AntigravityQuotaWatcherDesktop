@@ -2,56 +2,55 @@
  * 系统托盘模块
  */
 import { Tray, Menu, app, nativeImage, dialog } from 'electron';
-import { 
-  showWidgetWindow, 
-  hideWidgetWindow, 
+import {
+  showWidgetWindow,
+  hideWidgetWindow,
   isWidgetVisible,
-  showSettingsWindow 
+  showSettingsWindow
 } from './window';
 import { QuotaService } from './quota';
 import { logger } from './logger';
 
 let tray: Tray | null = null;
 
+import path from 'path';
+
 /**
- * 创建一个简单的托盘图标（16x16 蓝色圆形）
+ * 获取资源路径
  */
-function createTrayIcon(): Electron.NativeImage {
-  const size = 16;
-  const buffer = Buffer.alloc(size * size * 4);
-  
-  const centerX = size / 2;
-  const centerY = size / 2;
-  const radius = 6;
-  
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const idx = (y * size + x) * 4;
-      const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-      
-      if (dist <= radius) {
-        buffer[idx] = 59;     // R
-        buffer[idx + 1] = 130; // G
-        buffer[idx + 2] = 246; // B
-        buffer[idx + 3] = 255; // A
-      } else {
-        buffer[idx] = 0;
-        buffer[idx + 1] = 0;
-        buffer[idx + 2] = 0;
-        buffer[idx + 3] = 0;
-      }
-    }
+function getAssetPath(...paths: string[]): string {
+  const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'resources')
+    : path.join(__dirname, '../../resources');
+
+  return path.join(RESOURCES_PATH, ...paths);
+}
+
+/**
+ * 获取托盘图标
+ */
+function getTrayIcon(): Electron.NativeImage {
+  // Windows 推荐使用 ICO，但 nativeImage 也很好地支持 PNG
+  // 为了最佳效果，我们使用专门生成的托盘 PNG
+  const iconName = 'tray-32x32.png';
+  const iconPath = getAssetPath(iconName);
+
+  // 如果加载失败，回退到主图标
+  const icon = nativeImage.createFromPath(iconPath);
+  if (icon.isEmpty()) {
+    logger.warn(`Tray icon not found at ${iconPath}, trying icon.png`);
+    return nativeImage.createFromPath(getAssetPath('icon.png'));
   }
-  
-  return nativeImage.createFromBuffer(buffer, { width: size, height: size });
+
+  return icon;
 }
 
 /**
  * 创建系统托盘
  */
 export function createTray(): Tray {
-  const icon = createTrayIcon();
-  
+  const icon = getTrayIcon();
+
   tray = new Tray(icon);
   tray.setToolTip('AG Quota Watcher Desktop');
 

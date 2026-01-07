@@ -16,12 +16,25 @@ app.on('before-quit', () => {
 });
 
 /**
+ * 获取图标路径
+ */
+function getIconPath(): string {
+  const RESOURCES_PATH = app.isPackaged
+    ? path.join(process.resourcesPath, 'resources')
+    : path.join(__dirname, '../../resources');
+
+  // Windows 上使用 ico 效果更好，但 Electron 也支持 png
+  // 这里优先使用 png，因为它是通用的
+  return path.join(RESOURCES_PATH, 'icon.png');
+}
+
+/**
  * 创建悬浮窗（小组件风格，无边框无按钮）
  */
 export async function createWidgetWindow(): Promise<BrowserWindow> {
   // 获取保存的窗口位置
   const savedBounds = store.get('widgetBounds') as { x: number; y: number; width: number; height: number } | undefined;
-  
+
   // 默认窗口大小（紧凑的小组件）
   const defaultWidth = 280;
   const defaultHeight = 180;
@@ -45,6 +58,7 @@ export async function createWidgetWindow(): Promise<BrowserWindow> {
     show: false,            // 先隐藏
     // 修复 Windows 上透明窗口首次拖拽失灵的问题
     backgroundColor: '#00000000',
+    icon: getIconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -110,6 +124,7 @@ export async function createSettingsWindow(): Promise<BrowserWindow> {
     skipTaskbar: false,
     backgroundColor: '#1f2937',
     show: false,
+    icon: getIconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

@@ -44,7 +44,7 @@
   },
   "build": {
     "appId": "com.agquota.watcher.desktop",
-    "productName": "AG Quota Watcher Desktop",
+    "productName": "AG-Quota-Watcher-Desktop",
     "directories": {
       "output": "dist-electron"
     },
