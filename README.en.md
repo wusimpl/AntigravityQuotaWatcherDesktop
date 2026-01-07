@@ -49,7 +49,11 @@ This is the desktop version of [Antigravity Quota Watcher](https://github.com/wu
 - **x64**: For Intel Macs
 - **arm64**: For Apple Silicon (M1/M2/M3) Macs
 
-Drag it to your Applications folder.
+After dragging to your Applications folder, since the app is unsigned, you may see a "Cannot Be Opened" warning on first launch. Run the following command in Terminal before opening:
+
+```bash
+xattr -cr /Applications/AG-Quota-Watcher-Desktop.app
+```
 
 ### Linux
 

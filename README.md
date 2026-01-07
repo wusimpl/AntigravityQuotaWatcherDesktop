@@ -49,7 +49,11 @@
 - **x64**：Intel 芯片 Mac
 - **arm64**：Apple Silicon (M1/M2/M3) Mac
 
-拖拽到 Applications 文件夹即可。
+拖拽到 Applications 文件夹后，由于应用未签名，首次打开可能会提示"无法打开"。请在终端执行以下命令后再打开：
+
+```bash
+xattr -cr /Applications/AG-Quota-Watcher-Desktop.app
+```
 
 ### Linux
 
