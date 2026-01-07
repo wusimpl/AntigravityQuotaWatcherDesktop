@@ -108,13 +108,7 @@ const ModelRow: React.FC<ModelRowProps> = React.memo(({
       <span className="text-sm text-gray-300 flex-1 truncate" title={model.modelId}>
         {model.displayName}
       </span>
-      <span className={`w-12 text-xs text-center ${
-        (model.remainingPercentage ?? 100) <= 30 
-          ? 'text-red-400' 
-          : (model.remainingPercentage ?? 100) <= 50 
-            ? 'text-yellow-400' 
-            : 'text-green-400'
-      }`}>
+      <span className="w-12 text-xs text-center text-gray-400">
         {model.remainingPercentage !== undefined ? `${Math.round(model.remainingPercentage)}%` : '-'}
       </span>
       <span className="w-20 text-xs text-gray-400 text-center" title={model.resetTime}>
@@ -148,6 +142,7 @@ interface ModelInfo {
 interface AccountQuotaData {
   account: AccountInfo;
   models: ModelInfo[];
+  tier?: string;  // 账户级别 (FREE, PRO, TEAMS 等)
 }
 
 const SettingsPage: React.FC = () => {
@@ -204,7 +199,7 @@ const SettingsPage: React.FC = () => {
             remainingPercentage: m.remainingPercentage,
             resetTime: m.resetTime,
           })) || [];
-          return { account, models };
+          return { account, models, tier: snapshot?.tier };
         });
         setAccountQuotas(quotaData);
 
@@ -574,21 +569,32 @@ const SettingsPage: React.FC = () => {
         <section>
           <h3 className="text-sm font-medium text-gray-300 mb-3">账户管理</h3>
           <div className="space-y-2">
-            {accounts.map(account => (
+            {/* 表头 */}
+            <div className="flex items-center px-3 py-1.5 text-xs text-gray-500">
+              <span className="flex-1">邮箱</span>
+              <span className="w-16 text-center">级别</span>
+              <span className="w-16 text-center">操作</span>
+            </div>
+            {accountQuotas.map(({ account, tier }) => (
               <div
                 key={account.id}
                 className="flex items-center justify-between px-3 py-2 bg-gray-800 rounded-lg"
               >
                 <span className="text-sm text-gray-200 truncate flex-1">{account.email}</span>
-                <button
-                  className={`ml-2 px-2 py-1 text-xs rounded transition-colors ${deleteConfirm === account.id
-                    ? 'bg-red-600 text-white'
-                    : 'text-gray-400 hover:text-red-400 hover:bg-gray-700'
-                    }`}
-                  onClick={() => handleDeleteAccount(account.id)}
-                >
-                  {deleteConfirm === account.id ? '确认删除' : '删除'}
-                </button>
+                <span className="w-16 text-xs text-center text-gray-400">
+                  {tier || '-'}
+                </span>
+                <div className="w-16 text-center">
+                  <button
+                    className={`px-2 py-1 text-xs rounded transition-colors ${deleteConfirm === account.id
+                      ? 'bg-red-600 text-white'
+                      : 'text-gray-400 hover:text-red-400 hover:bg-gray-700'
+                      }`}
+                    onClick={() => handleDeleteAccount(account.id)}
+                  >
+                    {deleteConfirm === account.id ? '确认删除' : '删除'}
+                  </button>
+                </div>
               </div>
             ))}
             <button
@@ -621,7 +627,7 @@ const SettingsPage: React.FC = () => {
                   <div className="px-3 py-2 bg-gray-700/50 border-b border-gray-700 flex items-center gap-3">
                     <span className="w-8"></span>
                     <span className="text-sm text-gray-300 flex-1 truncate">{account.email}</span>
-                    <span className="w-12 text-xs text-gray-500 text-center">配额</span>
+                    <span className="w-12 text-xs text-gray-500 text-center">剩余配额</span>
                     <span className="w-20 text-xs text-gray-500 text-center">重置时间</span>
                     <span className="w-24 text-xs text-gray-500 text-center">别名</span>
                   </div>
