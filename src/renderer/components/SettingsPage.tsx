@@ -161,6 +161,8 @@ const SettingsPage: React.FC = () => {
     showWidget: false,
     widgetScale: 1,
     showResetTimeInWidget: true,
+    showModelNameInWidget: true,
+    showPercentageInWidget: true,
     language: 'auto',
   });
   const [modelConfigs, setModelConfigs] = useState<Record<string, ModelConfig>>({});
@@ -204,7 +206,7 @@ const SettingsPage: React.FC = () => {
             displayName: m.displayName,
             remainingPercentage: m.remainingPercentage,
             resetTime: m.resetTime,
-          })) || [];
+          }))?.sort((a, b) => a.displayName.localeCompare(b.displayName)) || [];
           return { account, models, tier: snapshot?.tier };
         });
         setAccountQuotas(quotaData);
@@ -250,7 +252,7 @@ const SettingsPage: React.FC = () => {
         displayName: m.displayName,
         remainingPercentage: m.remainingPercentage,
         resetTime: m.resetTime,
-      }));
+      })).sort((a, b) => a.displayName.localeCompare(b.displayName));
 
       setAccountQuotas(prev =>
         prev.map(item => (item.account.id === data.accountId ? { ...item, models } : item))
@@ -567,6 +569,40 @@ const SettingsPage: React.FC = () => {
                   type="checkbox"
                   checked={settings.showResetTimeInWidget ?? true}
                   onChange={e => updateSetting('showResetTimeInWidget', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+
+            {/* 显示模型名称开关 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm text-gray-200">{t.settings.showModelName}</span>
+                <p className="text-xs text-gray-500 mt-0.5">{t.settings.showModelNameDesc}</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.showModelNameInWidget ?? true}
+                  onChange={e => updateSetting('showModelNameInWidget', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+
+            {/* 显示剩余额度百分比开关 */}
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm text-gray-200">{t.settings.showPercentage}</span>
+                <p className="text-xs text-gray-500 mt-0.5">{t.settings.showPercentageDesc}</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.showPercentageInWidget ?? true}
+                  onChange={e => updateSetting('showPercentageInWidget', e.target.checked)}
                   className="sr-only peer"
                 />
                 <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>

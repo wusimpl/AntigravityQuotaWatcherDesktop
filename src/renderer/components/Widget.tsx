@@ -56,6 +56,8 @@ const Widget: React.FC = () => {
     showWidget: true,
     widgetScale: 1,
     showResetTimeInWidget: true,
+    showModelNameInWidget: true,
+    showPercentageInWidget: true,
     language: 'auto',
   });
   const [accountModelConfigs, setAccountModelConfigs] = useState<AccountModelConfigs>({});
@@ -294,17 +296,21 @@ const Widget: React.FC = () => {
           
           {/* 内容层 */}
           <div className="relative z-10 flex flex-col items-center gap-0.5">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <LeftIcon className="w-4 h-4 text-blue-200" />
-              <span className="text-[12px] font-bold tracking-wider text-white/90 font-sans uppercase">
-                {leftModel.alias || leftModel.displayName}
-              </span>
-            </div>
-            <div className="relative">
-              <span className={`text-3xl font-bold font-mono tracking-tighter ${leftColor.text} transition-colors duration-300`}>
-                {Math.round(leftModel.remainingPercentage)}%
-              </span>
-            </div>
+            {(settings.showModelNameInWidget ?? true) && (
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <LeftIcon className="w-4 h-4 text-blue-200" />
+                <span className="text-[12px] font-bold tracking-wider text-white/90 font-sans uppercase">
+                  {leftModel.alias || leftModel.displayName}
+                </span>
+              </div>
+            )}
+            {(settings.showPercentageInWidget ?? true) && (
+              <div className="relative">
+                <span className={`text-3xl font-bold font-mono tracking-tighter ${leftColor.text} transition-colors duration-300`}>
+                  {Math.round(leftModel.remainingPercentage)}%
+                </span>
+              </div>
+            )}
             {/* Reset Time */}
             {settings.showResetTimeInWidget && formatResetTimeSimple(leftModel.resetTime) && (
               <span className="text-xs text-white/60 font-semibold tracking-wide">
@@ -322,17 +328,21 @@ const Widget: React.FC = () => {
             
             {/* 内容层 */}
             <div className="relative z-10 flex flex-col items-center gap-0.5">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <RightIcon className="w-4 h-4 text-orange-200" />
-                <span className="text-[12px] font-bold tracking-wider text-white/90 font-sans uppercase">
-                  {rightModel.alias || rightModel.displayName}
-                </span>
-              </div>
-              <div className="relative">
-                <span className={`text-3xl font-bold font-mono tracking-tighter ${rightColor.text} transition-colors duration-300`}>
-                  {Math.round(rightModel.remainingPercentage)}%
-                </span>
-              </div>
+              {(settings.showModelNameInWidget ?? true) && (
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <RightIcon className="w-4 h-4 text-orange-200" />
+                  <span className="text-[12px] font-bold tracking-wider text-white/90 font-sans uppercase">
+                    {rightModel.alias || rightModel.displayName}
+                  </span>
+                </div>
+              )}
+              {(settings.showPercentageInWidget ?? true) && (
+                <div className="relative">
+                  <span className={`text-3xl font-bold font-mono tracking-tighter ${rightColor.text} transition-colors duration-300`}>
+                    {Math.round(rightModel.remainingPercentage)}%
+                  </span>
+                </div>
+              )}
               {/* Reset Time */}
               {settings.showResetTimeInWidget && formatResetTimeSimple(rightModel.resetTime) && (
                 <span className="text-xs text-white/60 font-semibold tracking-wide">

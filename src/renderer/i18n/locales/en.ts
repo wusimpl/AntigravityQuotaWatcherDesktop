@@ -40,6 +40,10 @@ export const en: Translations = {
     widgetSize: 'Widget Size',
     showResetTime: 'Show Reset Time',
     showResetTimeDesc: 'Display quota reset countdown in widget',
+    showModelName: 'Show Model Name',
+    showModelNameDesc: 'Display model name in widget',
+    showPercentage: 'Show Percentage',
+    showPercentageDesc: 'Display remaining quota percentage in widget',
 
     // Account management
     accountSection: 'Account Management',

@@ -73,6 +73,8 @@ interface AppSettings {
   showWidget: boolean;
   widgetScale: number;
   showResetTimeInWidget: boolean;
+  showModelNameInWidget: boolean;
+  showPercentageInWidget: boolean;
   language: 'auto' | 'zh-CN' | 'en';
 }
 

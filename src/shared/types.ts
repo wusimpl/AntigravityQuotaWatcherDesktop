@@ -38,6 +38,8 @@ export interface AppSettings {
   showWidget: boolean;        // 显示悬浮窗
   widgetScale: number;        // 悬浮窗缩放比例 (0.5-1.5)
   showResetTimeInWidget: boolean; // 在悬浮窗显示重置时间
+  showModelNameInWidget: boolean; // 在悬浮窗显示模型名称
+  showPercentageInWidget: boolean; // 在悬浮窗显示剩余额度百分比
   language: 'auto' | 'zh-CN' | 'en';
 }
 

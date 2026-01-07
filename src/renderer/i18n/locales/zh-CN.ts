@@ -38,6 +38,10 @@ export const zhCN = {
     widgetSize: '悬浮窗大小',
     showResetTime: '显示重置时间',
     showResetTimeDesc: '在悬浮窗中显示配额重置倒计时',
+    showModelName: '显示模型名称',
+    showModelNameDesc: '在悬浮窗中显示模型名称',
+    showPercentage: '显示剩余额度百分比',
+    showPercentageDesc: '在悬浮窗中显示剩余额度百分比',
 
     // 账户管理
     accountSection: '账户管理',

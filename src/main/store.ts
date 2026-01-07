@@ -35,6 +35,8 @@ const defaults: StoreSchema = {
     showWidget: false,  // 默认不显示悬浮窗
     widgetScale: 1,     // 默认缩放比例
     showResetTimeInWidget: true, // 默认显示重置时间
+    showModelNameInWidget: true, // 默认显示模型名称
+    showPercentageInWidget: true, // 默认显示剩余额度百分比
     language: 'auto',
   },
   modelConfigs: {},
