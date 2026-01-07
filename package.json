@@ -3,7 +3,10 @@
   "version": "0.9.0",
   "description": "AG Quota Watcher Desktop - 监控 Google Antigravity AI 模型配额的桌面应用",
   "main": "dist/main/main/index.js",
-  "author": "wusimpl",
+  "author": {
+    "name": "wusimpl",
+    "email": "fivesimple@foxmail.com"
+  },
   "license": "GPL-3.0",
   "scripts": {
     "dev": "concurrently -k \"npm run dev:main\" \"npm run dev:renderer\" \"npm run dev:electron\"",
