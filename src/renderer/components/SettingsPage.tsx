@@ -3,6 +3,7 @@
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { AppSettings, ModelConfig, SelectedModel, AccountModelConfigs, QuotaSnapshot } from '../../shared/types';
+import { useI18nContext } from '../i18n/I18nContext';
 import LoginDialog from './LoginDialog';
 
 // 独立的模型行组件，避免输入时父组件重渲染导致失焦
@@ -14,28 +15,30 @@ interface ModelRowProps {
   canSelect: boolean;
   onToggleSelect: (accountId: string, modelId: string) => void;
   onAliasChange: (accountId: string, modelId: string, alias: string) => void;
+  t: ReturnType<typeof useI18nContext>['t'];
+  format: ReturnType<typeof useI18nContext>['format'];
 }
 
 // 格式化重置时间为相对时间
-const formatResetTime = (resetTime?: string): string => {
+const formatResetTime = (resetTime: string | undefined, t: ReturnType<typeof useI18nContext>['t'], format: ReturnType<typeof useI18nContext>['format']): string => {
   if (!resetTime) return '-';
   const reset = new Date(resetTime);
   const now = new Date();
   const diffMs = reset.getTime() - now.getTime();
   
-  if (diffMs <= 0) return '已重置';
+  if (diffMs <= 0) return t.resetTimer.reset;
   
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
   
   if (diffHours > 24) {
     const days = Math.floor(diffHours / 24);
-    return `${days}天后`;
+    return format(t.resetTimer.daysLater, { days });
   }
   if (diffHours > 0) {
-    return `${diffHours}小时${diffMins}分`;
+    return format(t.resetTimer.hoursMinutes, { hours: diffHours, minutes: diffMins });
   }
-  return `${diffMins}分钟`;
+  return format(t.resetTimer.minutes, { minutes: diffMins });
 };
 
 const ModelRow: React.FC<ModelRowProps> = React.memo(({ 
@@ -45,7 +48,9 @@ const ModelRow: React.FC<ModelRowProps> = React.memo(({
   isSelected, 
   canSelect,
   onToggleSelect, 
-  onAliasChange 
+  onAliasChange,
+  t,
+  format,
 }) => {
   // 本地 state 控制输入框，避免每次按键触发父组件重渲染
   const [localAlias, setLocalAlias] = useState(config.alias);
@@ -112,13 +117,13 @@ const ModelRow: React.FC<ModelRowProps> = React.memo(({
         {model.remainingPercentage !== undefined ? `${Math.round(model.remainingPercentage)}%` : '-'}
       </span>
       <span className="w-20 text-xs text-gray-400 text-center" title={model.resetTime}>
-        {formatResetTime(model.resetTime)}
+        {formatResetTime(model.resetTime, t, format)}
       </span>
       <input
         type="text"
         value={localAlias}
         onChange={handleAliasChange}
-        placeholder="别名"
+        placeholder={t.settings.aliasPlaceholder}
         className="w-24 px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
       />
     </div>
@@ -146,6 +151,7 @@ interface AccountQuotaData {
 }
 
 const SettingsPage: React.FC = () => {
+  const { t, format, setLanguage: setI18nLanguage } = useI18nContext();
   const [settings, setSettings] = useState<AppSettings>({
     pollingInterval: 60,
     warningThreshold: 50,
@@ -349,6 +355,10 @@ const SettingsPage: React.FC = () => {
       const newSettings = { ...prev, [key]: value };
       latestSettingsRef.current = newSettings;
       scheduleSaveSettings();
+      // 如果是语言设置，同步更新 i18n
+      if (key === 'language') {
+        setI18nLanguage(value as AppSettings['language']);
+      }
       return newSettings;
     });
   };
@@ -462,7 +472,7 @@ const SettingsPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="w-full h-full bg-gray-900 flex items-center justify-center">
-        <div className="text-gray-400">加载中...</div>
+        <div className="text-gray-400">{t.common.loading}</div>
       </div>
     );
   }
@@ -478,13 +488,13 @@ const SettingsPage: React.FC = () => {
 
       {/* 标题栏 */}
       <div className="drag-region flex items-center px-4 py-3 bg-gray-800 border-b border-gray-700">
-        <span className="text-white font-medium">AG Quota 设置</span>
+        <span className="text-white font-medium">{t.settings.title}</span>
         <div className="flex-1" />
         <div className="no-drag flex items-center gap-1">
           <button
             className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
             onClick={handleMinimize}
-            title="最小化"
+            title={t.common.minimize}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
@@ -493,7 +503,7 @@ const SettingsPage: React.FC = () => {
           <button
             className="p-1.5 text-gray-400 hover:text-white hover:bg-red-600 rounded transition-colors"
             onClick={handleClose}
-            title="关闭"
+            title={t.common.close}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -506,12 +516,12 @@ const SettingsPage: React.FC = () => {
       <div className="flex-1 overflow-auto p-4 space-y-6">
         {/* 悬浮窗设置 */}
         <section>
-          <h3 className="text-sm font-medium text-gray-300 mb-3">悬浮窗</h3>
+          <h3 className="text-sm font-medium text-gray-300 mb-3">{t.settings.widgetSection}</h3>
           <div className="px-3 py-3 bg-gray-800 rounded-lg space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-sm text-gray-200">显示悬浮窗</span>
-                <p className="text-xs text-gray-500 mt-0.5">在桌面显示配额监控小组件</p>
+                <span className="text-sm text-gray-200">{t.settings.showWidget}</span>
+                <p className="text-xs text-gray-500 mt-0.5">{t.settings.showWidgetDesc}</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -527,7 +537,7 @@ const SettingsPage: React.FC = () => {
             {/* 悬浮窗大小滑动条 */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-400">悬浮窗大小</span>
+                <span className="text-sm text-gray-400">{t.settings.widgetSize}</span>
                 <span className="text-sm text-gray-300">{Math.round((settings.widgetScale || 1) * 100)}%</span>
               </div>
               <input
@@ -549,8 +559,8 @@ const SettingsPage: React.FC = () => {
             {/* 显示重置时间开关 */}
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-sm text-gray-200">显示重置时间</span>
-                <p className="text-xs text-gray-500 mt-0.5">在悬浮窗中显示配额重置倒计时</p>
+                <span className="text-sm text-gray-200">{t.settings.showResetTime}</span>
+                <p className="text-xs text-gray-500 mt-0.5">{t.settings.showResetTimeDesc}</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -567,13 +577,13 @@ const SettingsPage: React.FC = () => {
 
         {/* 账户管理 */}
         <section>
-          <h3 className="text-sm font-medium text-gray-300 mb-3">账户管理</h3>
+          <h3 className="text-sm font-medium text-gray-300 mb-3">{t.settings.accountSection}</h3>
           <div className="space-y-2">
             {/* 表头 */}
             <div className="flex items-center px-3 py-1.5 text-xs text-gray-500">
-              <span className="flex-1">邮箱</span>
-              <span className="w-16 text-center">级别</span>
-              <span className="w-16 text-center">操作</span>
+              <span className="flex-1">{t.settings.email}</span>
+              <span className="w-16 text-center">{t.settings.tier}</span>
+              <span className="w-16 text-center">{t.settings.action}</span>
             </div>
             {accountQuotas.map(({ account, tier }) => (
               <div
@@ -592,7 +602,7 @@ const SettingsPage: React.FC = () => {
                       }`}
                     onClick={() => handleDeleteAccount(account.id)}
                   >
-                    {deleteConfirm === account.id ? '确认删除' : '删除'}
+                    {deleteConfirm === account.id ? t.settings.confirmDelete : t.common.delete}
                   </button>
                 </div>
               </div>
@@ -601,7 +611,7 @@ const SettingsPage: React.FC = () => {
               className="w-full px-3 py-2 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-800 rounded-lg border border-dashed border-gray-600 transition-colors"
               onClick={handleAddAccount}
             >
-              + 添加账户
+              {t.settings.addAccount}
             </button>
           </div>
         </section>
@@ -609,15 +619,15 @@ const SettingsPage: React.FC = () => {
         {/* 模型配置 */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-gray-300">模型显示开关</h3>
+            <h3 className="text-sm font-medium text-gray-300">{t.settings.modelSection}</h3>
             <span className="text-xs text-gray-500">
-              已选 {selectedModels.length}/2 个模型
+              {format(t.settings.selectedCount, { count: selectedModels.length })}
             </span>
           </div>
           
           {accountQuotas.length === 0 ? (
             <div className="text-sm text-gray-500 py-2 px-3 bg-gray-800 rounded-lg">
-              暂无模型数据，请先登录账户
+              {t.settings.noModelData}
             </div>
           ) : (
             <div className="space-y-4">
@@ -627,16 +637,16 @@ const SettingsPage: React.FC = () => {
                   <div className="px-3 py-2 bg-gray-700/50 border-b border-gray-700 flex items-center gap-3">
                     <span className="w-8"></span>
                     <span className="text-sm text-gray-300 flex-1 truncate">{account.email}</span>
-                    <span className="w-12 text-xs text-gray-500 text-center">剩余配额</span>
-                    <span className="w-20 text-xs text-gray-500 text-center">重置时间</span>
-                    <span className="w-24 text-xs text-gray-500 text-center">别名</span>
+                    <span className="w-12 text-xs text-gray-500 text-center">{t.settings.remainingQuota}</span>
+                    <span className="w-20 text-xs text-gray-500 text-center">{t.settings.resetTime}</span>
+                    <span className="w-24 text-xs text-gray-500 text-center">{t.settings.alias}</span>
                   </div>
                   
                   {/* 模型列表 - 限制高度可滚动 */}
                   <div className="max-h-48 overflow-y-auto p-2 space-y-1.5">
                     {models.length === 0 ? (
                       <div className="text-xs text-gray-500 py-2 px-2">
-                        暂无模型数据
+                        {t.settings.noModels}
                       </div>
                     ) : (
                       models.map(model => (
@@ -649,6 +659,8 @@ const SettingsPage: React.FC = () => {
                           canSelect={canSelectMore}
                           onToggleSelect={handleToggleSelect}
                           onAliasChange={handleAliasChange}
+                          t={t}
+                          format={format}
                         />
                       ))
                     )}
@@ -662,16 +674,16 @@ const SettingsPage: React.FC = () => {
             className="w-full mt-3 px-3 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded-lg border border-dashed border-gray-600 transition-colors"
             onClick={handleRefreshModels}
           >
-            刷新模型列表
+            {t.settings.refreshModels}
           </button>
         </section>
 
         {/* 显示设置 */}
         <section>
-          <h3 className="text-sm font-medium text-gray-300 mb-3">显示设置</h3>
+          <h3 className="text-sm font-medium text-gray-300 mb-3">{t.settings.displaySection}</h3>
           <div className="space-y-3 px-3 py-3 bg-gray-800 rounded-lg">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">刷新频率</span>
+              <span className="text-sm text-gray-400">{t.settings.pollingInterval}</span>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -681,12 +693,12 @@ const SettingsPage: React.FC = () => {
                   onChange={e => updateSetting('pollingInterval', Math.max(10, parseInt(e.target.value) || 60))}
                   className="w-16 px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-gray-200 text-center focus:outline-none focus:border-blue-500"
                 />
-                <span className="text-sm text-gray-500">秒</span>
+                <span className="text-sm text-gray-500">{t.common.seconds}</span>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">警告阈值</span>
+              <span className="text-sm text-gray-400">{t.settings.warningThreshold}</span>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -696,12 +708,12 @@ const SettingsPage: React.FC = () => {
                   onChange={e => updateSetting('warningThreshold', Math.min(100, Math.max(0, parseInt(e.target.value) || 50)))}
                   className="w-16 px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-gray-200 text-center focus:outline-none focus:border-blue-500"
                 />
-                <span className="text-sm text-gray-500">%</span>
+                <span className="text-sm text-gray-500">{t.common.percent}</span>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">紧急阈值</span>
+              <span className="text-sm text-gray-400">{t.settings.criticalThreshold}</span>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -711,7 +723,7 @@ const SettingsPage: React.FC = () => {
                   onChange={e => updateSetting('criticalThreshold', Math.min(100, Math.max(0, parseInt(e.target.value) || 30)))}
                   className="w-16 px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-gray-200 text-center focus:outline-none focus:border-blue-500"
                 />
-                <span className="text-sm text-gray-500">%</span>
+                <span className="text-sm text-gray-500">{t.common.percent}</span>
               </div>
             </div>
           </div>
@@ -719,10 +731,10 @@ const SettingsPage: React.FC = () => {
 
         {/* 系统设置 */}
         <section>
-          <h3 className="text-sm font-medium text-gray-300 mb-3">系统设置</h3>
+          <h3 className="text-sm font-medium text-gray-300 mb-3">{t.settings.systemSection}</h3>
           <div className="space-y-3 px-3 py-3 bg-gray-800 rounded-lg">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">开机自启</span>
+              <span className="text-sm text-gray-400">{t.settings.autoStart}</span>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -735,7 +747,7 @@ const SettingsPage: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">系统通知</span>
+              <span className="text-sm text-gray-400">{t.settings.notifications}</span>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -748,13 +760,13 @@ const SettingsPage: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-400">语言</span>
+              <span className="text-sm text-gray-400">{t.settings.language}</span>
               <select
                 value={settings.language}
                 onChange={e => updateSetting('language', e.target.value as AppSettings['language'])}
                 className="px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-gray-200 focus:outline-none focus:border-blue-500"
               >
-                <option value="auto">跟随系统</option>
+                <option value="auto">{t.settings.languageAuto}</option>
                 <option value="zh-CN">简体中文</option>
                 <option value="en">English</option>
               </select>
@@ -764,9 +776,9 @@ const SettingsPage: React.FC = () => {
 
         {/* 版本信息 */}
         <section className="text-center text-xs text-gray-500 pb-4 space-y-1">
-          <div>AG Quota Watcher Desktop</div>
-          <div>监控 Google Antigravity AI 模型配额</div>
-          <div>作者: @wusimpl</div>
+          <div>{t.settings.appTitle}</div>
+          <div>{t.settings.appDesc}</div>
+          <div>{t.settings.author}</div>
         </section>
       </div>
     </div>

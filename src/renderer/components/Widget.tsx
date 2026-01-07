@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { QuotaSnapshot, AppSettings, ModelConfig, SelectedModel, AccountModelConfigs } from '../../shared/types';
 import { getQuotaLevel, QuotaLevel } from '../../shared/types';
+import { useI18nContext } from '../i18n/I18nContext';
 import './Widget.css';
 
 // 用于显示的模型数据（包含配额和配置）
@@ -45,6 +46,7 @@ const formatResetTimeSimple = (resetTime?: string): string => {
 };
 
 const Widget: React.FC = () => {
+  const { t } = useI18nContext();
   const [settings, setSettings] = useState<AppSettings>({
     pollingInterval: 60,
     warningThreshold: 50,
@@ -249,7 +251,7 @@ const Widget: React.FC = () => {
       return (
         <div className="flex items-center justify-center w-full h-full">
           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping mr-2" />
-          <span className="text-[10px] text-blue-200/70 font-medium tracking-widest uppercase">Initializing</span>
+          <span className="text-[10px] text-blue-200/70 font-medium tracking-widest uppercase">{t.widget.initializing}</span>
         </div>
       );
     }
@@ -259,7 +261,7 @@ const Widget: React.FC = () => {
       return (
         <div className="flex items-center justify-center w-full h-full">
           <BotIcon className="w-3.5 h-3.5 text-gray-400 mr-1.5" />
-          <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">No Model Selected</span>
+          <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">{t.widget.noModelSelected}</span>
         </div>
       );
     }
@@ -389,7 +391,7 @@ const Widget: React.FC = () => {
         {/* Label: Binary Capsule (Bottom) */}
         <div className="absolute -bottom-8 left-0 right-0 text-center transition-opacity duration-300 opacity-0 group-hover:opacity-100 pointer-events-none">
           <span className="text-[9px] font-medium tracking-[0.3em] uppercase text-white/40 text-shadow-sm">
-            AG Quota Watcher
+            {t.widget.appName}
           </span>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useI18nContext } from '../i18n/I18nContext';
 
 interface AccountInfo {
   id: string;
@@ -18,6 +19,7 @@ const AccountSelector: React.FC<AccountSelectorProps> = ({
   onAccountChange,
   onAddAccount,
 }) => {
+  const { t } = useI18nContext();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +35,7 @@ const AccountSelector: React.FC<AccountSelectorProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const displayText = activeAccount?.email || '未登录';
+  const displayText = activeAccount?.email || t.account.notLoggedIn;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -84,7 +86,7 @@ const AccountSelector: React.FC<AccountSelectorProps> = ({
             </div>
           ) : (
             <div className="px-3 py-2 text-sm text-gray-500">
-              暂无账户
+              {t.account.noAccounts}
             </div>
           )}
 
@@ -102,7 +104,7 @@ const AccountSelector: React.FC<AccountSelectorProps> = ({
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            <span>添加账户</span>
+            <span>{t.account.addAccount}</span>
           </button>
         </div>
       )}

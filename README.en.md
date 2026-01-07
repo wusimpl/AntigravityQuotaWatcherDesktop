@@ -2,17 +2,13 @@
 
 #### Choose Your Language:  [简体中文](./README.md) | English
 
-> [!NOTE]
-> This is an unofficial tool and has no affiliation with Antigravity.
-> This application relies on internal implementation details of the Google Cloud Code API, which may change at any time.
-
 > [!CAUTION]
 > This application requires logging in with a Google account and obtaining an Access Token. The token is stored locally only and will not be uploaded to any server.
 > However, please note: **Anyone with your token can access your Google Cloud resources**. Please keep your configuration files safe.
 
-**A standalone desktop application for real-time monitoring of Google Antigravity AI model quota usage.**
+**A standalone desktop application for real-time monitoring of Google Antigravity AI model remaining quota.**
 
-This is the desktop version of [Antigravity Quota Watcher](https://github.com/wusimpl/AntigravityQuotaWatcher) extension. No IDE required, check your quota anytime, anywhere.
+This is the desktop version of [Antigravity Quota Watcher](https://github.com/wusimpl/AntigravityQuotaWatcher) extension. No local Antigravity environment required, check your quota anytime, anywhere.
 
 ## Demo
 
@@ -59,10 +55,7 @@ This is the desktop version of [Antigravity Quota Watcher](https://github.com/wu
 
 ### Widget
 
-The widget features a "Binary Energy Capsule" design, showing up to 2 models:
-
-<!-- TODO: Screenshot -->
-![Widget Detail](./images/widget-detail.png)
+The widget features a "Twin Energy Capsule" design, showing up to 2 models:
 
 - Left blue area shows the first model
 - Right orange area shows the second model
@@ -75,11 +68,8 @@ In the settings page you can:
 
 - Manage Google accounts (add/remove)
 - Select models to display in the widget
-- Set model aliases (e.g., shorten "gemini-2.5-pro" to "Pro")
+- Set model aliases (e.g., shorten "gemini-3-pro" to "G Pro")
 - Adjust refresh interval, warning thresholds, etc.
-
-<!-- TODO: Screenshot -->
-![Settings Detail](./images/settings-detail.png)
 
 ### Tray Menu
 
@@ -100,16 +90,6 @@ Same as the extension version, quota status is color-coded:
 - **Gray**: Quota exhausted (0%)
 
 Thresholds can be customized in settings.
-
-## Differences from the Extension
-
-| Feature | Extension | Desktop App |
-|---------|-----------|-------------|
-| Requires IDE | Yes | No |
-| Multi-account | Supported | Supported |
-| Display | Status bar | Floating widget |
-| Auto-start | Not supported | Supported |
-| System notifications | Not supported | Supported (WIP) |
 
 ## FAQ
 
@@ -141,7 +121,7 @@ This project is open source under the GPL-3.0 License. Please comply with the li
 Additionally, please be aware of the following:
 
 1. When redistributing, **please keep the source attribution**: [https://github.com/wusimpl/ag-quota-desktop](https://github.com/wusimpl/ag-quota-desktop)
-2. Please do not use for commercial purposes
+2. Please do not use for commercial purposes, use the code legally and compliantly
 3. If the license changes, it will be updated in this GitHub repository without further notice
 
 ## Acknowledgements

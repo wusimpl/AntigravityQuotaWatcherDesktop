@@ -3,6 +3,7 @@
  * 显示登录流程状态，支持手动复制授权链接
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { useI18nContext } from '../i18n/I18nContext';
 
 type LoginFlowState = 'idle' | 'preparing' | 'opening_browser' | 'waiting_auth' | 'exchanging_token' | 'success' | 'error' | 'cancelled';
 
@@ -19,6 +20,7 @@ interface LoginDialogProps {
 }
 
 const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onSuccess }) => {
+  const { t } = useI18nContext();
   const [flowInfo, setFlowInfo] = useState<LoginFlowInfo>({ state: 'idle' });
   const [copied, setCopied] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -97,21 +99,21 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onSuccess })
   const getStatusText = () => {
     switch (flowInfo.state) {
       case 'preparing':
-        return '正在准备登录...';
+        return t.login.preparing;
       case 'opening_browser':
-        return '正在打开浏览器...';
+        return t.login.openingBrowser;
       case 'waiting_auth':
-        return '等待授权中...';
+        return t.login.waitingAuth;
       case 'exchanging_token':
-        return '正在完成登录...';
+        return t.login.exchangingToken;
       case 'success':
-        return '登录成功！';
+        return t.login.success;
       case 'error':
-        return '登录失败';
+        return t.login.failed;
       case 'cancelled':
-        return '已取消';
+        return t.login.cancelled;
       default:
-        return '准备中...';
+        return t.login.preparing2;
     }
   };
 
@@ -133,7 +135,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onSuccess })
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
           </svg>
-          <span className="text-white font-medium">Google 账户登录</span>
+          <span className="text-white font-medium">{t.login.title}</span>
         </div>
 
         {/* 内容区 */}
@@ -176,7 +178,7 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onSuccess })
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>浏览器没有打开？请手动复制链接到浏览器中打开</span>
+                <span>{t.login.browserNotOpened}</span>
               </div>
               
               {/* 链接显示框 */}
@@ -201,14 +203,14 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onSuccess })
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      已复制
+                      {t.login.copied}
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
-                      复制链接
+                      {t.login.copyLink}
                     </>
                   )}
                 </button>
@@ -224,14 +226,14 @@ const LoginDialog: React.FC<LoginDialogProps> = ({ isOpen, onClose, onSuccess })
               onClick={handleRetry}
               className="px-4 py-2 text-sm font-medium text-blue-400 hover:text-blue-300 hover:bg-gray-700 rounded-lg transition-colors"
             >
-              重试
+              {t.common.retry}
             </button>
           )}
           <button
             onClick={handleCancel}
             className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
           >
-            {flowInfo.state === 'success' ? '关闭' : '取消'}
+            {flowInfo.state === 'success' ? t.common.close : t.common.cancel}
           </button>
         </div>
       </div>

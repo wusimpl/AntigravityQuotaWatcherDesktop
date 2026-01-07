@@ -1,4 +1,5 @@
 import React from 'react';
+import { useI18nContext } from '../i18n/I18nContext';
 import AccountSelector from './AccountSelector';
 
 interface AccountInfo {
@@ -21,6 +22,8 @@ const TitleBar: React.FC<TitleBarProps> = ({
   onAddAccount,
   onSettingsClick 
 }) => {
+  const { t } = useI18nContext();
+
   const handleMinimize = () => {
     window.electronAPI?.minimizeWindow();
   };
@@ -45,7 +48,7 @@ const TitleBar: React.FC<TitleBarProps> = ({
         <button
           className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
           onClick={onSettingsClick}
-          title="设置"
+          title={t.common.settings}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
@@ -58,7 +61,7 @@ const TitleBar: React.FC<TitleBarProps> = ({
         <button
           className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors"
           onClick={handleMinimize}
-          title="最小化"
+          title={t.common.minimize}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
@@ -69,7 +72,7 @@ const TitleBar: React.FC<TitleBarProps> = ({
         <button
           className="p-1.5 text-gray-400 hover:text-white hover:bg-red-600 rounded transition-colors"
           onClick={handleClose}
-          title="关闭"
+          title={t.common.close}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

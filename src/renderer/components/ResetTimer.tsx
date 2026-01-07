@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useI18nContext } from '../i18n/I18nContext';
 
 interface ResetTimerProps {
   resetTime: string;
@@ -7,8 +8,8 @@ interface ResetTimerProps {
 /**
  * 格式化剩余时间
  */
-function formatTimeRemaining(ms: number): string {
-  if (ms <= 0) return '已重置';
+function formatTimeRemaining(ms: number, resetText: string): string {
+  if (ms <= 0) return resetText;
   
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
@@ -22,6 +23,7 @@ function formatTimeRemaining(ms: number): string {
 }
 
 const ResetTimer: React.FC<ResetTimerProps> = ({ resetTime }) => {
+  const { t } = useI18nContext();
   const [timeRemaining, setTimeRemaining] = useState<string>('');
 
   useEffect(() => {
@@ -29,7 +31,7 @@ const ResetTimer: React.FC<ResetTimerProps> = ({ resetTime }) => {
       const resetDate = new Date(resetTime);
       const now = new Date();
       const diff = resetDate.getTime() - now.getTime();
-      setTimeRemaining(formatTimeRemaining(diff));
+      setTimeRemaining(formatTimeRemaining(diff, t.resetTimer.reset));
     };
 
     // 立即更新一次
@@ -39,7 +41,7 @@ const ResetTimer: React.FC<ResetTimerProps> = ({ resetTime }) => {
     const interval = setInterval(updateTimer, 1000);
 
     return () => clearInterval(interval);
-  }, [resetTime]);
+  }, [resetTime, t.resetTimer.reset]);
 
   return (
     <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
@@ -47,7 +49,7 @@ const ResetTimer: React.FC<ResetTimerProps> = ({ resetTime }) => {
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <span>下次重置: {timeRemaining}</span>
+      <span>{t.resetTimer.nextReset}: {timeRemaining}</span>
     </div>
   );
 };

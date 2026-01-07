@@ -10,6 +10,7 @@ import {
 } from './window';
 import { QuotaService } from './quota';
 import { logger } from './logger';
+import { getTrayTranslations, formatMessage } from './i18n';
 
 let tray: Tray | null = null;
 
@@ -77,10 +78,11 @@ export function updateTrayMenu(): void {
   if (!tray) return;
 
   const widgetVisible = isWidgetVisible();
+  const t = getTrayTranslations();
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: widgetVisible ? '隐藏悬浮窗' : '显示悬浮窗',
+      label: widgetVisible ? t.hideWidget : t.showWidget,
       click: () => {
         if (widgetVisible) {
           hideWidgetWindow();
@@ -92,7 +94,7 @@ export function updateTrayMenu(): void {
     },
     { type: 'separator' },
     {
-      label: '立即刷新',
+      label: t.refreshNow,
       click: async () => {
         try {
           const quotaService = QuotaService.getInstance();
@@ -104,25 +106,25 @@ export function updateTrayMenu(): void {
     },
     { type: 'separator' },
     {
-      label: '设置',
+      label: t.settings,
       click: () => {
         showSettingsWindow();
       },
     },
     {
-      label: '关于',
+      label: t.about,
       click: () => {
         dialog.showMessageBox({
           type: 'info',
-          title: '关于 AG Quota Watcher Desktop',
-          message: 'AG Quota Watcher Desktop',
-          detail: `版本: ${app.getVersion()}\n\n监控 Google Antigravity AI 模型配额的桌面应用\n\n作者: @wusimpl`,
+          title: t.aboutTitle,
+          message: t.aboutMessage,
+          detail: formatMessage(t.aboutDetail, { version: app.getVersion() }),
         });
       },
     },
     { type: 'separator' },
     {
-      label: '退出',
+      label: t.exit,
       click: () => {
         app.quit();
       },

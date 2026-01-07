@@ -8,7 +8,7 @@
 
 **一个独立的桌面应用，用于实时监控 Google Antigravity AI 模型配额剩余情况。**
 
-这是 [Antigravity Quota Watcher](https://github.com/wusimpl/AntigravityQuotaWatcher) 插件的桌面版本，不依赖任何 IDE，随时随地查看配额。
+这是 [Antigravity Quota Watcher](https://github.com/wusimpl/AntigravityQuotaWatcher) 插件的桌面版本，不依赖本地 Antigravity 环境，可随时随地查看剩余配额。
 
 ## 演示
 
@@ -57,9 +57,6 @@
 
 悬浮窗采用「双生能量胶囊」设计，最多显示 2 个模型的配额：
 
-<!-- TODO: 截图 -->
-![悬浮窗详情](./images/widget-detail.png)
-
 - 左侧蓝色区域显示第一个模型
 - 右侧橙色区域显示第二个模型
 - 水位高度表示剩余配额百分比
@@ -71,11 +68,8 @@
 
 - 管理 Google 账户（添加/删除）
 - 选择要在悬浮窗显示的模型
-- 设置模型别名（比如把 "gemini-2.5-pro" 简化成 "Pro"）
+- 设置模型别名（比如把 "gemini-3-pro" 简化成 "G Pro"）
 - 调整刷新频率、警告阈值等
-
-<!-- TODO: 截图 -->
-![设置页面详情](./images/settings-detail.png)
 
 ### 托盘菜单
 
