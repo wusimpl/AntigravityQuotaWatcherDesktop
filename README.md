@@ -95,7 +95,7 @@ xattr -cr /Applications/AG-Quota-Watcher-Desktop.app
 
 - 显示/隐藏悬浮窗
 - 立即刷新配额
-- 打开设置
+- 打开设置页面
 - 退出应用
 
 ## 配额状态颜色
