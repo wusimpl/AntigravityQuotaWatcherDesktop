@@ -14,7 +14,7 @@ let forceQuit = false;
 const WIDGET_BASE_HEIGHT_PX = 86;
 const WIDGET_SINGLE_WIDTH_PX = 150;
 const WIDGET_DOUBLE_WIDTH_PX = 280;
-const WIDGET_SAFETY_MARGIN_PX = 2;
+const WIDGET_SAFETY_MARGIN_PX = 80; // 扩大边距以容纳光晕和阴影效果
 
 // 监听 app 退出前事件，设置强制退出标志
 app.on('before-quit', () => {

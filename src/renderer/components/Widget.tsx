@@ -152,7 +152,7 @@ const Widget: React.FC = () => {
       : 1;
     const baseWidth = displayModels.length > 1 ? 280 : 150;
     const baseHeight = 86;
-    const safety = 2;
+    const safety = 80; // 与 main/window.ts 中的 WIDGET_SAFETY_MARGIN_PX 保持一致
 
     const width = Math.max(1, Math.ceil(baseWidth * scale) + safety);
     const height = Math.max(1, Math.ceil(baseHeight * scale) + safety);
@@ -381,7 +381,7 @@ const Widget: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center w-screen h-screen bg-transparent overflow-hidden">
+    <div className="flex items-center justify-center w-screen h-screen bg-transparent">
       {/* 
         The Main Capsule Container 
         Structure:
@@ -399,11 +399,10 @@ const Widget: React.FC = () => {
         }
       >
 
-        {/* 1. Global Atmosphere Glow (Behind) */}
-        <div className="absolute -inset-8 bg-gradient-to-r from-blue-600/30 via-purple-500/10 to-orange-600/30 rounded-[60px] blur-3xl opacity-40" />
+        {/* 1. Global Atmosphere Glow - 已移除，避免透明窗口下出现矩形背景 */}
 
         {/* 2. The Glass Capsule Wrapper */}
-        <div className={`relative h-[86px] rounded-[44px] p-[1px] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8)] transition-all duration-300 ${displayModels.length > 1 ? 'w-[280px] bg-gradient-to-r from-blue-400/30 via-white/20 to-orange-400/30' : 'w-[150px] bg-gradient-to-r from-blue-400/30 to-blue-400/10'}`}>
+        <div className={`relative h-[86px] rounded-[44px] p-[1px] transition-all duration-300 ${displayModels.length > 1 ? 'w-[280px] bg-gradient-to-r from-blue-400/30 via-white/20 to-orange-400/30' : 'w-[150px] bg-gradient-to-r from-blue-400/30 to-blue-400/10'}`}>
 
           {/* 3. Inner Body Background */}
           <div className="relative w-full h-full bg-[#0a0a0a]/80 rounded-[43px] flex items-center overflow-hidden border border-white/5">
