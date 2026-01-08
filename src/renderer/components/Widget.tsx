@@ -388,7 +388,7 @@ const Widget: React.FC = () => {
         style={
           (settings.widgetScale ?? 1) === 1
             ? undefined
-            : { transform: `scale(${settings.widgetScale ?? 1})` }
+            : ({ zoom: settings.widgetScale ?? 1 } as React.CSSProperties)
         }
       >
 
