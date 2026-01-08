@@ -13,9 +13,10 @@ Write-Host "=== AG Quota Watcher Desktop Build Script ===" -ForegroundColor Cyan
 if ($Clean) {
     Write-Host "`n[1/3] Cleaning build directories..." -ForegroundColor Yellow
     if (Test-Path "dist") { Remove-Item -Recurse -Force "dist" }
-    if (Test-Path "dist-electron") { Remove-Item -Recurse -Force "dist-electron" }
+    if (Test-Path "dist-electron\windows") { Remove-Item -Recurse -Force "dist-electron\windows" }
     Write-Host "Clean complete" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "`n[1/3] Skipping clean (use -Clean flag to enable)" -ForegroundColor Gray
 }
 
@@ -26,14 +27,14 @@ if ($LASTEXITCODE -ne 0) { throw "Build failed" }
 
 # Package (portable only)
 Write-Host "`n[3/3] Packaging Windows portable..." -ForegroundColor Yellow
-npx electron-builder --win portable
+npx electron-builder --win portable --config.directories.output=dist-electron/windows
 if ($LASTEXITCODE -ne 0) { throw "Packaging failed" }
 
 # Done
 Write-Host "`n=== Build Complete! ===" -ForegroundColor Green
-Write-Host "Output directory: dist-electron" -ForegroundColor Cyan
+Write-Host "Output directory: dist-electron/windows" -ForegroundColor Cyan
 
 # Open output directory
-if (Test-Path "dist-electron") {
-    explorer "dist-electron"
+if (Test-Path "dist-electron\windows") {
+    explorer "dist-electron\windows"
 }

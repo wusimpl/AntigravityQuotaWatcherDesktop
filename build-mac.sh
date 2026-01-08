@@ -53,7 +53,8 @@ echo -e "${CYAN}=== AG Quota Watcher Desktop Build Script ===${NC}"
 # Step 1: Clean
 if [ "$CLEAN" = true ]; then
     echo -e "\n${YELLOW}[1/4] Cleaning build directories...${NC}"
-    rm -rf dist dist-electron
+    rm -rf dist
+    rm -rf dist-electron/mac
     echo -e "${GREEN}Clean complete${NC}"
 else
     echo -e "\n${CYAN}[1/4] Skipping clean (use --clean flag to enable)${NC}"
@@ -77,15 +78,15 @@ echo -e "\n${YELLOW}[4/4] Packaging application...${NC}"
 case $PLATFORM in
     mac)
         echo "Building for macOS..."
-        npx electron-builder --mac
+        npx electron-builder --mac --config.directories.output=dist-electron/mac
         ;;
     win)
         echo "Building for Windows..."
-        npx electron-builder --win
+        npx electron-builder --win --config.directories.output=dist-electron/windows
         ;;
     all)
         echo "Building for all platforms..."
-        npx electron-builder --mac --win
+        npx electron-builder --mac --win --config.directories.output=dist-electron
         ;;
     *)
         echo -e "${RED}Unknown platform: $PLATFORM${NC}"
@@ -95,10 +96,10 @@ esac
 
 # Done
 echo -e "\n${GREEN}=== Build Complete! ===${NC}"
-echo -e "${CYAN}Output directory: dist-electron${NC}"
+echo -e "${CYAN}Output directory: dist-electron/$PLATFORM${NC}"
 
 # List output files
-if [ -d "dist-electron" ]; then
+if [ -d "dist-electron/$PLATFORM" ]; then
     echo -e "\n${CYAN}Generated files:${NC}"
-    ls -la dist-electron/*.dmg dist-electron/*.exe 2>/dev/null || true
+    ls -la dist-electron/$PLATFORM/*.dmg dist-electron/$PLATFORM/*.exe 2>/dev/null || true
 fi

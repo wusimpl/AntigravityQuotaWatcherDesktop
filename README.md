@@ -125,6 +125,19 @@ xattr -cr /Applications/AG-Quota-Watcher-Desktop.app
 2. 尝试删除账户后重新登录
 3. 点击「立即刷新」手动刷新
 
+## 配置文件路径
+
+本应用的所有配置（包括登录 Token）均保存在本地。如果需要备份、迁移或手动清理，可以在以下位置找到配置文件：
+
+- **config.json**: 存储应用设置和模型配置
+- **auth.json**: 存储 Google 账户登录 Token（已通过 `safeStorage` 加密）
+
+**具体路径：**
+
+- **Windows**: `%APPDATA%\AG-Quota-Watcher-Desktop\`
+- **macOS**: `~/Library/Application Support/AG-Quota-Watcher-Desktop/`
+- **Linux**: `~/.config/AG-Quota-Watcher-Desktop/`
+
 ## 提交 Issue
 
 请在提交 issue 时说明：

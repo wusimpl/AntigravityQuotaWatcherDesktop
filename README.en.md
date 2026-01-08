@@ -126,6 +126,19 @@ Right-click the tray icon and select "Show Widget".
 2. Try removing and re-adding your account
 3. Click "Refresh Now" to manually refresh
 
+## Configuration File Location
+
+All configurations (including login tokens) are stored locally. If you need to backup, migrate, or manually clean up, you can find the following configuration files:
+
+- **config.json**: Stores application settings and model configurations
+- **auth.json**: Stores Google account login tokens (encrypted with `safeStorage`)
+
+**Actual Paths:**
+
+- **Windows**: `%APPDATA%\AG-Quota-Watcher-Desktop\`
+- **macOS**: `~/Library/Application Support/AG-Quota-Watcher-Desktop/`
+- **Linux**: `~/.config/AG-Quota-Watcher-Desktop/`
+
 ## Submitting Issues
 
 When submitting an issue, please include:
