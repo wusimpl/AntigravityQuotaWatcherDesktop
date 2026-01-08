@@ -135,9 +135,20 @@ All configurations (including login tokens) are stored locally. If you need to b
 
 **Actual Paths:**
 
-- **Windows**: `%APPDATA%\AG-Quota-Watcher-Desktop\`
-- **macOS**: `~/Library/Application Support/AG-Quota-Watcher-Desktop/`
-- **Linux**: `~/.config/AG-Quota-Watcher-Desktop/`
+**Windows:**
+```
+%APPDATA%\AG-Quota-Watcher-Desktop\
+```
+
+**macOS:**
+```
+~/Library/Application Support/AG-Quota-Watcher-Desktop/
+```
+
+**Linux:**
+```
+~/.config/AG-Quota-Watcher-Desktop/
+```
 
 ## Submitting Issues
 

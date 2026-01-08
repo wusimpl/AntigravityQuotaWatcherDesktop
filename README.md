@@ -134,13 +134,20 @@ xattr -cr /Applications/AG-Quota-Watcher-Desktop.app
 
 **具体路径：**
 
-| 系统 | 路径 |
-|------|------|
-| Windows | <code>%APPDATA%\AG-Quota-Watcher-Desktop\</code> |
-| macOS | <code>~/Library/Application Support/AG-Quota-Watcher-Desktop/</code> |
-| Linux | <code>~/.config/AG-Quota-Watcher-Desktop/</code> |
+**Windows:**
+```
+%APPDATA%\AG-Quota-Watcher-Desktop\
+```
 
-> 💡 点击路径可以选中复制
+**macOS:**
+```
+~/Library/Application Support/AG-Quota-Watcher-Desktop/
+```
+
+**Linux:**
+```
+~/.config/AG-Quota-Watcher-Desktop/
+```
 
 ## 提交 Issue
 
