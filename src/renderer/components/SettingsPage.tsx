@@ -133,6 +133,7 @@ ModelRow.displayName = 'ModelRow';
 interface AccountInfo {
   id: string;
   email: string;
+  picture?: string;
 }
 
 interface ModelInfo {
@@ -634,6 +635,7 @@ const SettingsPage: React.FC = () => {
           <div className="space-y-2">
             {/* 表头 */}
             <div className="flex items-center px-3 py-1.5 text-xs text-gray-500">
+              <span className="w-8"></span>
               <span className="flex-1">{t.settings.email}</span>
               <span className="w-16 text-center">{t.settings.tier}</span>
               <span className="w-16 text-center">{t.settings.action}</span>
@@ -643,6 +645,23 @@ const SettingsPage: React.FC = () => {
                 key={account.id}
                 className="flex items-center justify-between px-3 py-2 bg-gray-800 rounded-lg"
               >
+                {/* 头像 */}
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-700 flex-shrink-0 mr-2">
+                  {account.picture ? (
+                    <img
+                      src={account.picture}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-500">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
                 <span className="text-sm text-gray-200 truncate flex-1">{account.email}</span>
                 <span className="w-16 text-xs text-center text-gray-400">
                   {tier || '-'}
