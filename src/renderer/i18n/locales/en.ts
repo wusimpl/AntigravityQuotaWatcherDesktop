@@ -87,6 +87,11 @@ export const en: Translations = {
     notifications: 'Notifications',
     language: 'Language',
     languageAuto: 'System Default',
+    exportLogs: 'Export Logs',
+    exportLogsDesc: 'Export application logs for troubleshooting',
+    exportLogsButton: 'Export',
+    exportLogsSuccess: 'Logs exported successfully',
+    exportLogsFailed: 'Export failed',
 
     // Version info
     appTitle: 'AG Quota Watcher Desktop',

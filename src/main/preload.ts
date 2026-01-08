@@ -175,6 +175,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getActiveAccount: () => ipcRenderer.invoke('get-active-account'),
   setActiveAccount: (accountId: string) => ipcRenderer.invoke('set-active-account', accountId),
   getAuthState: () => ipcRenderer.invoke('get-auth-state'),
+
+  // 日志导出
+  exportLogs: () => ipcRenderer.invoke('export-logs'),
+  getLogPath: () => ipcRenderer.invoke('get-log-path'),
 });
 
 // 类型声明
@@ -249,6 +253,10 @@ declare global {
       getActiveAccount: () => Promise<AccountInfo | null>;
       setActiveAccount: (accountId: string) => Promise<void>;
       getAuthState: () => Promise<AuthStateInfo>;
+
+      // 日志导出
+      exportLogs: () => Promise<{ success: boolean; cancelled?: boolean; filePath?: string }>;
+      getLogPath: () => Promise<string>;
     };
   }
 }

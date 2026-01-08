@@ -166,16 +166,17 @@ export class QuotaService {
 
   /** 获取单个账户的配额 */
   private async fetchAccountQuota(accountId: string, email: string): Promise<QuotaSnapshot> {
-    logger.log(`[QuotaService] Fetching quota for: ${email}`);
+    logger.log(`[QuotaService] Fetching quota for account: ${email}`);
     
     const accessToken = await this.authService.getValidAccessToken(accountId);
     
     // 获取项目信息
     const projectInfo = await this.apiClient.loadProjectInfo(accessToken);
-    logger.log(`[QuotaService] Project tier: ${projectInfo.tier}`);
+    logger.log(`[QuotaService] Project info loaded, tier: ${projectInfo.tier}, projectId: ${projectInfo.projectId}`);
     
     // 获取模型配额
     const modelsQuota = await this.apiClient.fetchModelsQuota(accessToken, projectInfo.projectId);
+    logger.log(`[QuotaService] Models quota fetched, count: ${modelsQuota.models.length}`);
     
     // 转换为 QuotaSnapshot
     const models: ModelQuotaInfo[] = modelsQuota.models.map((model) => ({
@@ -198,11 +199,11 @@ export class QuotaService {
 
   /** 处理获取错误 */
   private async handleFetchError(accountId: string, error: Error): Promise<void> {
-    logger.error(`[QuotaService] Fetch error for ${accountId}:`, error.message);
+    logger.error(`[QuotaService] Fetch error for account ${accountId}:`, error.message);
 
     // 认证错误，停止轮询
     if (error instanceof GoogleApiError && error.needsReauth()) {
-      logger.log('[QuotaService] Auth error, stopping polling');
+      logger.warn('[QuotaService] Authentication error detected, stopping polling');
       this.stopPolling();
       this.errorCallback?.(accountId, error);
       return;
@@ -210,6 +211,7 @@ export class QuotaService {
 
     // 不可重试的错误，直接通知
     if (error instanceof GoogleApiError && !error.isRetryable()) {
+      logger.warn('[QuotaService] Non-retryable error, notifying callback');
       this.errorCallback?.(accountId, error);
       return;
     }
@@ -218,7 +220,7 @@ export class QuotaService {
     if (this.retryCount < MAX_RETRIES) {
       this.retryCount++;
       this.statusCallback?.('retrying', this.retryCount);
-      logger.log(`[QuotaService] Retry ${this.retryCount}/${MAX_RETRIES} in ${RETRY_DELAY_MS}ms`);
+      logger.info(`[QuotaService] Retry ${this.retryCount}/${MAX_RETRIES} in ${RETRY_DELAY_MS}ms`);
       
       await this.delay(RETRY_DELAY_MS);
       
@@ -230,6 +232,7 @@ export class QuotaService {
           this.quotaCache.set(accountId, snapshot);
           this.updateCallback?.(accountId, snapshot);
           this.retryCount = 0;
+          logger.info('[QuotaService] Retry successful');
         }
       } catch (retryError) {
         // 递归调用以继续重试或最终报错
@@ -237,7 +240,7 @@ export class QuotaService {
       }
     } else {
       // 达到最大重试次数，通知错误并重置计数器
-      logger.error(`[QuotaService] Max retries (${MAX_RETRIES}) reached for ${accountId}`);
+      logger.error(`[QuotaService] Max retries (${MAX_RETRIES}) reached for account ${accountId}`);
       this.retryCount = 0;
       this.errorCallback?.(accountId, error);
     }

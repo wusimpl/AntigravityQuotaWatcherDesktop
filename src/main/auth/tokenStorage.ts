@@ -90,6 +90,7 @@ export class TokenStorage {
    * 保存 Token
    */
   saveToken(accountId: string, token: TokenData): void {
+    logger.log('[TokenStorage] Saving token for account:', accountId);
     const tokens = this.store.get(TOKEN_STORAGE_KEY, {});
     const encrypted = this.encrypt(JSON.stringify(token));
     tokens[accountId] = encrypted;
@@ -117,6 +118,7 @@ export class TokenStorage {
    * 删除 Token
    */
   deleteToken(accountId: string): void {
+    logger.log('[TokenStorage] Deleting token for account:', accountId);
     const tokens = this.store.get(TOKEN_STORAGE_KEY, {});
     delete tokens[accountId];
     this.store.set(TOKEN_STORAGE_KEY, tokens);
@@ -150,6 +152,7 @@ export class TokenStorage {
    * 保存账户信息
    */
   saveAccount(account: AccountData): void {
+    logger.log('[TokenStorage] Saving account:', account.email);
     const accounts = this.store.get(ACCOUNTS_STORAGE_KEY, []);
     const index = accounts.findIndex(a => a.id === account.id);
     if (index >= 0) {
@@ -171,6 +174,7 @@ export class TokenStorage {
    * 删除账户
    */
   deleteAccount(accountId: string): void {
+    logger.log('[TokenStorage] Deleting account:', accountId);
     const accounts = this.store.get(ACCOUNTS_STORAGE_KEY, []);
     const filtered = accounts.filter(a => a.id !== accountId);
     this.store.set(ACCOUNTS_STORAGE_KEY, filtered);
@@ -178,6 +182,7 @@ export class TokenStorage {
 
     // 如果删除的是当前活跃账户，切换到第一个
     if (this.getActiveAccountId() === accountId) {
+      logger.log('[TokenStorage] Deleted active account, switching to first available');
       this.setActiveAccountId(filtered[0]?.id);
     }
   }

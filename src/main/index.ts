@@ -1,7 +1,7 @@
 /**
  * Electron 主进程入口
  */
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import {
   createWidgetWindow,
   getWidgetWindow,
@@ -21,6 +21,10 @@ import { QuotaSnapshot, AppSettings, ModelConfig, SelectedModel, AccountModelCon
 import { store } from './store';
 import { logger } from './logger';
 
+// Initialize logger first
+logger.initialize();
+logger.info('[Main] Application starting, version:', app.getVersion());
+
 // 服务实例
 const authService = GoogleAuthService.getInstance();
 const quotaService = QuotaService.getInstance({ pollingInterval: 60_000 });
@@ -32,27 +36,35 @@ app.on('before-quit', () => authStateListenerAbortController.abort());
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
+  logger.info('[Main] Another instance is running, quitting');
   app.quit();
 } else {
   app.on('second-instance', () => {
+    logger.info('[Main] Second instance detected, showing settings window');
     // 第二个实例启动时，显示设置窗口
     showSettingsWindow();
   });
 
   app.whenReady().then(async () => {
+    logger.info('[Main] App ready, initializing services');
+    
     // 初始化认证服务
     await authService.initialize();
+    logger.info('[Main] Auth service initialized');
 
     // 创建悬浮窗（但不显示）
     await createWidgetWindow();
+    logger.info('[Main] Widget window created');
 
     // 创建托盘
     createTray();
+    logger.info('[Main] Tray created');
 
     // 根据设置决定是否显示悬浮窗
     const settings = store.get('settings');
     if (settings.showWidget) {
       showWidgetWindow();
+      logger.info('[Main] Widget window shown');
     }
 
     // 设置配额服务回调
@@ -61,10 +73,12 @@ if (!gotTheLock) {
     // 如果已认证，启动配额轮询
     if (authService.isAuthenticated()) {
       quotaService.startPolling();
+      logger.info('[Main] Quota polling started');
     }
 
     // 监听认证状态变化
     authService.onAuthStateChange((state) => {
+      logger.info('[Main] Auth state changed:', state.state);
       if (state.state === AuthState.AUTHENTICATED) {
         quotaService.startPolling();
       } else if (state.state === AuthState.NOT_AUTHENTICATED) {
@@ -74,6 +88,7 @@ if (!gotTheLock) {
 
     // 监听登录流程状态变化，发送到设置窗口
     authService.onLoginFlowChange((info) => {
+      logger.info('[Main] Login flow state:', info.state);
       const settingsWindow = getSettingsWindow();
       if (settingsWindow && !settingsWindow.isDestroyed()) {
         settingsWindow.webContents.send('login-flow-update', info);
@@ -82,14 +97,18 @@ if (!gotTheLock) {
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) {
+        logger.info('[Main] App activated, creating widget window');
         createWidgetWindow();
       }
     });
+    
+    logger.info('[Main] Application initialization complete');
   });
 
   app.on('window-all-closed', () => {
     // 不退出，保持托盘运行
     // macOS 和 Windows 都保持运行
+    logger.info('[Main] All windows closed, keeping tray running');
   });
 }
 
@@ -162,11 +181,13 @@ ipcMain.handle('get-app-version', () => {
 
 // Google 登录
 ipcMain.handle('google-login', async () => {
+  logger.info('[IPC] Google login requested');
   return authService.login();
 });
 
 // 取消登录
 ipcMain.handle('google-login-cancel', () => {
+  logger.info('[IPC] Google login cancelled');
   authService.cancelLogin();
 });
 
@@ -177,6 +198,7 @@ ipcMain.handle('get-login-flow-info', () => {
 
 // Google 登出
 ipcMain.handle('google-logout', async (_event, accountId?: string) => {
+  logger.info('[IPC] Google logout requested, accountId:', accountId || 'active');
   return authService.logout(accountId);
 });
 
@@ -192,6 +214,7 @@ ipcMain.handle('get-active-account', async () => {
 
 // 切换活跃账户
 ipcMain.handle('set-active-account', async (_event, accountId: string) => {
+  logger.info('[IPC] Set active account:', accountId);
   authService.setActiveAccount(accountId);
 });
 
@@ -203,6 +226,35 @@ ipcMain.handle('get-auth-state', () => {
 // 获取有效的 Access Token
 ipcMain.handle('get-access-token', async (_event, accountId?: string) => {
   return authService.getValidAccessToken(accountId);
+});
+
+// ========== 日志导出 IPC 处理器 ==========
+
+ipcMain.handle('export-logs', async () => {
+  logger.info('[IPC] Export logs requested');
+  
+  const settingsWindow = getSettingsWindow();
+  const result = await dialog.showSaveDialog(settingsWindow || BrowserWindow.getFocusedWindow()!, {
+    title: 'Export Logs',
+    defaultPath: `ag-quota-watcher-desktop-logs-${new Date().toISOString().split('T')[0]}.txt`,
+    filters: [
+      { name: 'Text Files', extensions: ['txt'] },
+      { name: 'Log Files', extensions: ['log'] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
+  });
+
+  if (result.canceled || !result.filePath) {
+    logger.info('[IPC] Export logs cancelled by user');
+    return { success: false, cancelled: true };
+  }
+
+  const success = logger.exportLogs(result.filePath);
+  return { success, filePath: result.filePath };
+});
+
+ipcMain.handle('get-log-path', () => {
+  return logger.getLogDir();
 });
 
 // ========== 配额相关 IPC 处理器 ==========
@@ -263,6 +315,7 @@ ipcMain.handle('save-settings', async (_event, data: {
   accountModelConfigs?: AccountModelConfigs;
   selectedModels?: SelectedModel[];
 }) => {
+  logger.info('[IPC] Saving settings');
   const { settings, modelConfigs, accountModelConfigs, selectedModels } = data;
   const prevSettings = store.get('settings') as AppSettings;
 

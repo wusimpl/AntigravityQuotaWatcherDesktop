@@ -161,6 +161,7 @@ const SettingsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'failed'>('idle');
 
   // 从 displayName 提取默认别名（取第一个单词）
   const getDefaultAlias = (displayName: string): string => {
@@ -453,6 +454,24 @@ const SettingsPage: React.FC = () => {
   const handleRefreshModels = async () => {
     await window.electronAPI?.refreshQuota();
     await loadSettings();
+  };
+
+  // 导出日志
+  const handleExportLogs = async () => {
+    try {
+      const result = await window.electronAPI?.exportLogs();
+      if (result?.success) {
+        setExportStatus('success');
+        setTimeout(() => setExportStatus('idle'), 3000);
+      } else if (!result?.cancelled) {
+        setExportStatus('failed');
+        setTimeout(() => setExportStatus('idle'), 3000);
+      }
+    } catch (err) {
+      console.error('Failed to export logs:', err);
+      setExportStatus('failed');
+      setTimeout(() => setExportStatus('idle'), 3000);
+    }
   };
 
   // 窗口控制
@@ -886,6 +905,29 @@ const SettingsPage: React.FC = () => {
                 <option value="zh-CN">简体中文</option>
                 <option value="en">English</option>
               </select>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm text-gray-400">{t.settings.exportLogs}</span>
+                <p className="text-xs text-gray-500 mt-0.5">{t.settings.exportLogsDesc}</p>
+              </div>
+              <button
+                onClick={handleExportLogs}
+                className={`px-3 py-1 text-sm rounded transition-colors ${
+                  exportStatus === 'success'
+                    ? 'bg-green-600 text-white'
+                    : exportStatus === 'failed'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                }`}
+              >
+                {exportStatus === 'success'
+                  ? t.settings.exportLogsSuccess
+                  : exportStatus === 'failed'
+                  ? t.settings.exportLogsFailed
+                  : t.settings.exportLogsButton}
+              </button>
             </div>
           </div>
         </section>

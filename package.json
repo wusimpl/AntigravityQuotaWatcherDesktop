@@ -9,7 +9,7 @@
   },
   "license": "GPL-3.0",
   "scripts": {
-    "dev": "concurrently -k \"npm run dev:main\" \"npm run dev:renderer\" \"npm run dev:electron\"",
+    "dev": "concurrently --kill-others-on-fail --kill-signal SIGKILL \"npm run dev:main\" \"npm run dev:renderer\" \"npm run dev:electron\"",
     "dev:main": "tsc -p tsconfig.main.json --watch",
     "dev:renderer": "vite",
     "dev:electron": "node scripts/wait-and-start.js",

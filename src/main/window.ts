@@ -6,6 +6,7 @@ import { BrowserWindow, screen, app } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { store } from './store';
+import { logger } from './logger';
 
 let widgetWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
@@ -55,6 +56,8 @@ function getWidgetDesiredContentSize(): { width: number; height: number } {
  * 创建悬浮窗（小组件风格，无边框无按钮）
  */
 export async function createWidgetWindow(): Promise<BrowserWindow> {
+  logger.info('[Window] Creating widget window');
+  
   // 获取保存的窗口位置
   const savedBounds = store.get('widgetBounds') as { x: number; y: number; width: number; height: number } | undefined;
 
@@ -90,8 +93,10 @@ export async function createWidgetWindow(): Promise<BrowserWindow> {
 
   // 加载悬浮窗页面
   if (process.env.NODE_ENV === 'development') {
+    logger.info('[Window] Loading widget in development mode');
     await widgetWindow.loadURL('http://localhost:5173/#/widget');
   } else {
+    logger.info('[Window] Loading widget in production mode');
     await widgetWindow.loadFile(path.join(__dirname, '../../renderer/index.html'), {
       hash: '/widget'
     });
@@ -144,10 +149,13 @@ export function resizeWidgetWindowContentSize(contentWidth: number, contentHeigh
 export async function createSettingsWindow(): Promise<BrowserWindow> {
   // 如果设置窗口已存在，直接显示
   if (settingsWindow && !settingsWindow.isDestroyed()) {
+    logger.info('[Window] Settings window already exists, focusing');
     settingsWindow.show();
     settingsWindow.focus();
     return settingsWindow;
   }
+
+  logger.info('[Window] Creating settings window');
 
   const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
   const windowWidth = 580;
@@ -181,8 +189,10 @@ export async function createSettingsWindow(): Promise<BrowserWindow> {
 
   // 加载设置页面
   if (process.env.NODE_ENV === 'development') {
+    logger.info('[Window] Loading settings in development mode');
     await settingsWindow.loadURL('http://localhost:5173/#/settings');
   } else {
+    logger.info('[Window] Loading settings in production mode');
     await settingsWindow.loadFile(path.join(__dirname, '../../renderer/index.html'), {
       hash: '/settings'
     });

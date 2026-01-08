@@ -522,6 +522,7 @@ export class GoogleAuthService {
    * 发送 Token 请求
    */
   private makeTokenRequest(params: URLSearchParams): Promise<TokenResponse> {
+    logger.log('[GoogleAuth] Making token request');
     return new Promise((resolve, reject) => {
       const postData = params.toString();
       const url = new URL(GOOGLE_TOKEN_ENDPOINT);
@@ -544,17 +545,23 @@ export class GoogleAuthService {
           try {
             const response = JSON.parse(data);
             if (response.error) {
+              logger.error('[GoogleAuth] Token request error:', response.error, response.error_description);
               reject(new Error(`Token error: ${response.error} - ${response.error_description}`));
             } else {
+              logger.log('[GoogleAuth] Token request successful');
               resolve(response as TokenResponse);
             }
           } catch (e) {
+            logger.error('[GoogleAuth] Failed to parse token response');
             reject(new Error(`Failed to parse token response: ${data}`));
           }
         });
       });
 
-      req.on('error', reject);
+      req.on('error', (err) => {
+        logger.error('[GoogleAuth] Token request network error:', err.message);
+        reject(err);
+      });
       req.write(postData);
       req.end();
     });
@@ -564,6 +571,7 @@ export class GoogleAuthService {
    * 获取用户信息
    */
   private fetchUserInfo(accessToken: string): Promise<UserInfoResponse> {
+    logger.log('[GoogleAuth] Fetching user info');
     return new Promise((resolve, reject) => {
       const options: https.RequestOptions = {
         hostname: 'www.googleapis.com',
@@ -581,17 +589,24 @@ export class GoogleAuthService {
         res.on('end', () => {
           try {
             if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-              resolve(JSON.parse(data) as UserInfoResponse);
+              const userInfo = JSON.parse(data) as UserInfoResponse;
+              logger.log('[GoogleAuth] User info fetched successfully, email:', userInfo.email);
+              resolve(userInfo);
             } else {
+              logger.error('[GoogleAuth] Failed to fetch user info, status:', res.statusCode);
               reject(new Error(`Failed to fetch user info: ${res.statusCode}`));
             }
           } catch (e) {
+            logger.error('[GoogleAuth] Failed to parse user info response');
             reject(new Error(`Failed to parse user info: ${data}`));
           }
         });
       });
 
-      req.on('error', reject);
+      req.on('error', (err) => {
+        logger.error('[GoogleAuth] User info request error:', err.message);
+        reject(err);
+      });
       req.end();
     });
   }

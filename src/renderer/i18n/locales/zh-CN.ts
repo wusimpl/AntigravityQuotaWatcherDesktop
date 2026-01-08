@@ -85,6 +85,11 @@ export const zhCN = {
     notifications: '系统通知',
     language: '语言',
     languageAuto: '跟随系统',
+    exportLogs: '导出日志',
+    exportLogsDesc: '导出应用日志用于问题诊断',
+    exportLogsButton: '导出',
+    exportLogsSuccess: '日志已导出',
+    exportLogsFailed: '导出失败',
 
     // 版本信息
     appTitle: 'AG Quota Watcher Desktop',
