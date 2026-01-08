@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 提交 Issue 前，请详细阅读 README
+    url: https://github.com/wusimpl/ag-quota-desktop#readme
+    about: 请先阅读 README，了解应用使用方法和常见问题，如果仍有疑问，请提交 Issue

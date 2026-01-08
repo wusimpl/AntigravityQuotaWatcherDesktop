@@ -1,0 +1,104 @@
+name: "🐛 Bug 报告"
+description: "提交一个 Bug 以帮助我们改进"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请务必提供完整信息，以帮助作者更好的排错。
+        > 💡 不知道怎么导出日志的请看 [README 的介绍](https://github.com/wusimpl/ag-quota-desktop#提交-issue)
+
+  - type: input
+    id: version
+    attributes:
+      label: 应用版本
+      description: 请填写你正在使用的应用版本（可在托盘菜单「关于」或设置页面底部查看）
+      placeholder: "例如: v0.9.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: 操作系统
+      options:
+        - Windows
+        - macOS
+        - Linux
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install_type
+    attributes:
+      label: 安装方式
+      description: 你是如何安装本应用的？
+      options:
+        - Windows Setup 安装包 (.exe)
+        - Windows Portable 免安装版
+        - macOS DMG (Intel x64)
+        - macOS DMG (Apple Silicon arm64)
+        - Linux AppImage
+        - Linux deb
+        - 从源码构建
+    validations:
+      required: false
+
+  - type: dropdown
+    id: problem_area
+    attributes:
+      label: 问题所在功能
+      description: 问题出现在哪个功能模块？
+      options:
+        - 登录/账户管理
+        - 悬浮窗显示
+        - 配额数据获取/刷新
+        - 系统托盘
+        - 设置页面
+        - 开机自启
+        - 其他
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 确认事项
+      options:
+        - label: 我已经尝试过重启应用
+          required: true
+        - label: 我已经检查过是否有相同的 Issue
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 请清晰地描述你遇到的问题，可以在此贴截图
+      placeholder: "描述你遇到了什么问题..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤（选填）
+      description: 请提供复现此问题的详细步骤
+      placeholder: |
+        1. 打开应用
+        2. 点击托盘图标 → 设置
+        3. ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 运行日志 (必填)
+      description: |
+        请在设置页面 → 系统设置 → 点击「导出日志」导出日志文件，然后拖拽上传到此处。
+        日志文件包含应用运行信息，有助于定位问题。
+      placeholder: "拖拽日志文件到此处上传，或粘贴日志内容..."
+    validations:
+      required: true
