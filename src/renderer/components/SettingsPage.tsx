@@ -576,6 +576,38 @@ const SettingsPage: React.FC = () => {
               </div>
             </div>
 
+            {/* 波形高度滑动条 */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">{t.settings.waveHeight}</span>
+                <span className="text-sm text-gray-300">
+                  {(settings.waveHeight ?? 3) === 1
+                    ? t.settings.waveHeightLevel1
+                    : (settings.waveHeight ?? 3) === 2
+                      ? t.settings.waveHeightLevel2
+                      : (settings.waveHeight ?? 3) === 3
+                        ? t.settings.waveHeightLevel3
+                        : (settings.waveHeight ?? 3) === 4
+                          ? t.settings.waveHeightLevel4
+                          : t.settings.waveHeightLevel5}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={5}
+                step={1}
+                value={settings.waveHeight ?? 3}
+                onChange={e => updateSetting('waveHeight', parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>1</span>
+                <span>3</span>
+                <span>5</span>
+              </div>
+            </div>
+
             {/* 显示重置时间开关 */}
             <div className="flex items-center justify-between">
               <div>

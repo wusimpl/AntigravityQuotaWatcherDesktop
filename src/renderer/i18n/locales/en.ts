@@ -32,7 +32,7 @@ export const en: Translations = {
   // Settings page
   settings: {
     title: 'AG Quota Settings',
-    
+
     // Widget settings
     widgetSection: 'Widget',
     showWidget: 'Show Widget',
@@ -43,6 +43,12 @@ export const en: Translations = {
     waveSpeedSlow: 'Slow',
     waveSpeedMedium: 'Medium',
     waveSpeedFast: 'Fast',
+    waveHeight: 'Wave Height',
+    waveHeightLevel1: 'Ripple',
+    waveHeightLevel2: 'Small',
+    waveHeightLevel3: 'Medium',
+    waveHeightLevel4: 'Large',
+    waveHeightLevel5: 'Huge',
     showResetTime: 'Show Reset Time',
     showResetTimeDesc: 'Display quota reset countdown in widget',
     showModelName: 'Show Model Name',

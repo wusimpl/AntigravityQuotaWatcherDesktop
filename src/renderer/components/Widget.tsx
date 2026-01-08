@@ -192,7 +192,7 @@ const Widget: React.FC = () => {
   );
 
   // [修改] 水箱波浪组件 - 旋转圆形波浪版
-  const WaterTank = ({ percentage, color, waveSpeed = 5 }: { percentage: number; color: 'blue' | 'orange'; waveSpeed?: number }) => {
+  const WaterTank = ({ percentage, color, waveSpeed = 5, waveHeight = 3 }: { percentage: number; color: 'blue' | 'orange'; waveSpeed?: number; waveHeight?: number }) => {
     // 1. 计算水位 (Top)
     // 液位逻辑：0% 为 100% (底部空)，100% 对应 0% (顶部满)
     let topValue = 100 - percentage;
@@ -212,8 +212,15 @@ const Widget: React.FC = () => {
     const isStill = speed === 0;
     // 速度映射：1(12s) 到 10(1.5s)
     const durationSec = speed === 0 ? 0 : (13.5 - speed * 1.2);
-    // 波浪圆角：静止时为0%（平面），运动时为43%（波浪）
-    const waveRadius = isStill ? '0%' : '43%';
+
+    // 3. 计算波形高度 (waveRadius)
+    // waveHeight: 1-5
+    // border-radius 越小，波浪起伏越大；越大，越平滑
+    // 1 -> 50% (微波/平滑), 2 -> 44%, 3 -> 38% (默认), 4 -> 31%, 5 -> 25% (巨浪/尖锐)
+    const heightLevel = Math.max(1, Math.min(5, waveHeight ?? 3));
+    const waveRadiusValue = 50 - (heightLevel - 1) * 6.25;
+    // 波浪圆角：静止时为0%（平面），运动时根据高度级别设置
+    const waveRadius = isStill ? '0%' : `${waveRadiusValue}%`;
 
     return (
       <div
@@ -309,7 +316,7 @@ const Widget: React.FC = () => {
         {/* Left Section */}
         <div className={`relative flex-1 h-full flex flex-col items-center justify-center overflow-hidden ${rightModel ? 'rounded-l-[43px] rounded-r-[0px]' : 'rounded-[43px]'}`}>
           {/* 水箱效果 */}
-          <WaterTank percentage={leftModel.remainingPercentage} color="blue" waveSpeed={settings.waveSpeed ?? 5} />
+          <WaterTank percentage={leftModel.remainingPercentage} color="blue" waveSpeed={settings.waveSpeed ?? 5} waveHeight={settings.waveHeight ?? 3} />
 
           {/* 内容层 */}
           <div className="relative z-10 flex flex-col items-center gap-0.5">
@@ -341,7 +348,7 @@ const Widget: React.FC = () => {
         {rightModel && rightColor && (
           <div className="relative flex-1 h-full flex flex-col items-center justify-center overflow-hidden rounded-r-[43px] rounded-l-[0px]">
             {/* 水箱效果 */}
-            <WaterTank percentage={rightModel.remainingPercentage} color="orange" waveSpeed={settings.waveSpeed ?? 5} />
+            <WaterTank percentage={rightModel.remainingPercentage} color="orange" waveSpeed={settings.waveSpeed ?? 5} waveHeight={settings.waveHeight ?? 3} />
 
             {/* 内容层 */}
             <div className="relative z-10 flex flex-col items-center gap-0.5">

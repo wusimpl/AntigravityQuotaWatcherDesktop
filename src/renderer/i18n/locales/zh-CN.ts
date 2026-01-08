@@ -30,7 +30,7 @@ export const zhCN = {
   // 设置页面
   settings: {
     title: 'AG Quota 设置',
-    
+
     // 悬浮窗设置
     widgetSection: '悬浮窗',
     showWidget: '显示悬浮窗',
@@ -41,6 +41,12 @@ export const zhCN = {
     waveSpeedSlow: '缓慢',
     waveSpeedMedium: '中等',
     waveSpeedFast: '快速',
+    waveHeight: '波形高度',
+    waveHeightLevel1: '微波',
+    waveHeightLevel2: '小浪',
+    waveHeightLevel3: '中浪',
+    waveHeightLevel4: '大浪',
+    waveHeightLevel5: '巨浪',
     showResetTime: '显示重置时间',
     showResetTimeDesc: '在悬浮窗中显示配额重置倒计时',
     showModelName: '显示模型名称',

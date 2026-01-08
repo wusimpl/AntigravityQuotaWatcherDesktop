@@ -38,6 +38,7 @@ export interface AppSettings {
   showWidget: boolean;        // 显示悬浮窗
   widgetScale: number;        // 悬浮窗缩放比例 (0.5-1.5)
   waveSpeed: number;          // 水波速度 (0-10, 0=静止)
+  waveHeight: number;         // 波形高度 (1-5, 1=小波浪, 5=大波浪)
   showResetTimeInWidget: boolean; // 在悬浮窗显示重置时间
   showModelNameInWidget: boolean; // 在悬浮窗显示模型名称
   showPercentageInWidget: boolean; // 在悬浮窗显示剩余额度百分比
@@ -54,6 +55,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showWidget: false,
   widgetScale: 0.8,       // 悬浮窗默认大小 80%
   waveSpeed: 1,           // 水波速度默认缓慢
+  waveHeight: 3,          // 波形高度默认中等
   showResetTimeInWidget: true,
   showModelNameInWidget: true,
   showPercentageInWidget: true,
