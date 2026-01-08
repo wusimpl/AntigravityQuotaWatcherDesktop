@@ -3,6 +3,7 @@
  * 使用 electron-store 进行本地数据持久化
  */
 import Store from 'electron-store';
+import { DEFAULT_SETTINGS } from '../shared/types';
 import type { AppSettings, ModelConfig, SelectedModel, AccountModelConfigs } from '../shared/types';
 
 // 配置类型定义
@@ -26,20 +27,7 @@ export interface StoreSchema {
 
 // 默认配置
 const defaults: StoreSchema = {
-  settings: {
-    pollingInterval: 60,
-    warningThreshold: 50,
-    criticalThreshold: 30,
-    autoStart: false,
-    notifications: true,
-    showWidget: false,  // 默认不显示悬浮窗
-    widgetScale: 0.7,  // 默认缩放比例
-    waveSpeed: 5,  // 默认水波速度
-    showResetTimeInWidget: true, // 默认显示重置时间
-    showModelNameInWidget: true, // 默认显示模型名称
-    showPercentageInWidget: true, // 默认显示剩余额度百分比
-    language: 'auto',
-  },
+  settings: DEFAULT_SETTINGS,
   modelConfigs: {},
   accountModelConfigs: {},
   selectedModels: [],

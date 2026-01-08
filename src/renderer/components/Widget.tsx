@@ -3,8 +3,8 @@
  * 高保真还原设计图：玻璃拟态、冷暖对撞、3D质感、水箱效果
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { DEFAULT_SETTINGS, getQuotaLevel, QuotaLevel } from '../../shared/types';
 import type { QuotaSnapshot, AppSettings, ModelConfig, SelectedModel, AccountModelConfigs } from '../../shared/types';
-import { getQuotaLevel, QuotaLevel } from '../../shared/types';
 import { useI18nContext } from '../i18n/I18nContext';
 import './Widget.css';
 
@@ -47,20 +47,8 @@ const formatResetTimeSimple = (resetTime?: string): string => {
 
 const Widget: React.FC = () => {
   const { t } = useI18nContext();
-  const [settings, setSettings] = useState<AppSettings>({
-    pollingInterval: 60,
-    warningThreshold: 50,
-    criticalThreshold: 30,
-    autoStart: false,
-    notifications: true,
-    showWidget: true,
-    widgetScale: 1,
-    waveSpeed: 5,
-    showResetTimeInWidget: true,
-    showModelNameInWidget: true,
-    showPercentageInWidget: true,
-    language: 'auto',
-  });
+  // 悬浮窗使用 showWidget: true 覆盖默认值
+  const [settings, setSettings] = useState<AppSettings>({ ...DEFAULT_SETTINGS, showWidget: true });
   const [accountModelConfigs, setAccountModelConfigs] = useState<AccountModelConfigs>({});
   const [selectedModels, setSelectedModels] = useState<SelectedModel[]>([]);
   const [allQuotas, setAllQuotas] = useState<Record<string, QuotaSnapshot>>({});

@@ -44,6 +44,22 @@ export interface AppSettings {
   language: 'auto' | 'zh-CN' | 'en';
 }
 
+// 默认设置值（唯一定义，所有地方引用此常量）
+export const DEFAULT_SETTINGS: AppSettings = {
+  pollingInterval: 60,
+  warningThreshold: 50,
+  criticalThreshold: 30,
+  autoStart: false,
+  notifications: true,
+  showWidget: false,
+  widgetScale: 0.8,       // 悬浮窗默认大小 80%
+  waveSpeed: 1,           // 水波速度默认缓慢
+  showResetTimeInWidget: true,
+  showModelNameInWidget: true,
+  showPercentageInWidget: true,
+  language: 'auto',
+};
+
 // 模型配置
 export interface ModelConfig {
   visible: boolean;

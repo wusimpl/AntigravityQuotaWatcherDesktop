@@ -2,6 +2,7 @@
  * 设置页面 - 独立窗口
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { DEFAULT_SETTINGS } from '../../shared/types';
 import type { AppSettings, ModelConfig, SelectedModel, AccountModelConfigs, QuotaSnapshot } from '../../shared/types';
 import { useI18nContext } from '../i18n/I18nContext';
 import LoginDialog from './LoginDialog';
@@ -150,20 +151,7 @@ interface AccountQuotaData {
 
 const SettingsPage: React.FC = () => {
   const { t, format, setLanguage: setI18nLanguage } = useI18nContext();
-  const [settings, setSettings] = useState<AppSettings>({
-    pollingInterval: 60,
-    warningThreshold: 50,
-    criticalThreshold: 30,
-    autoStart: false,
-    notifications: true,
-    showWidget: false,
-    widgetScale: 1,
-    waveSpeed: 5,
-    showResetTimeInWidget: true,
-    showModelNameInWidget: true,
-    showPercentageInWidget: true,
-    language: 'auto',
-  });
+  const [settings, setSettings] = useState<AppSettings>({ ...DEFAULT_SETTINGS });
   const [modelConfigs, setModelConfigs] = useState<Record<string, ModelConfig>>({});
   const [accountModelConfigs, setAccountModelConfigs] = useState<AccountModelConfigs>({});
   const [selectedModels, setSelectedModels] = useState<SelectedModel[]>([]);
@@ -562,12 +550,12 @@ const SettingsPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">{t.settings.waveSpeed}</span>
                 <span className="text-sm text-gray-300">
-                  {(settings.waveSpeed ?? 5) === 0 
-                    ? t.settings.waveSpeedStill 
-                    : (settings.waveSpeed ?? 5) <= 3 
-                      ? t.settings.waveSpeedSlow 
-                      : (settings.waveSpeed ?? 5) <= 7 
-                        ? t.settings.waveSpeedMedium 
+                  {(settings.waveSpeed ?? 5) === 0
+                    ? t.settings.waveSpeedStill
+                    : (settings.waveSpeed ?? 5) <= 3
+                      ? t.settings.waveSpeedSlow
+                      : (settings.waveSpeed ?? 5) <= 7
+                        ? t.settings.waveSpeedMedium
                         : t.settings.waveSpeedFast}
                 </span>
               </div>
