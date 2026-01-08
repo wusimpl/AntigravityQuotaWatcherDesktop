@@ -261,13 +261,13 @@ const Widget: React.FC = () => {
     const level = getQuotaLevel(percentage, settings.warningThreshold, settings.criticalThreshold);
     switch (level) {
       case QuotaLevel.Depleted:
-        return { text: 'text-gray-400' };
+        return { text: 'text-quota-depleted' };
       case QuotaLevel.Critical:
-        return { text: 'text-red-400' };
+        return { text: 'text-quota-critical' };
       case QuotaLevel.Warning:
-        return { text: 'text-yellow-400' };
+        return { text: 'text-quota-warning' };
       default:
-        return { text: 'text-green-400' };
+        return { text: 'text-quota-normal' };
     }
   };
 
