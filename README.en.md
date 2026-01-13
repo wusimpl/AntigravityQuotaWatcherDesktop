@@ -126,6 +126,10 @@ Right-click the tray icon and select "Show Widget".
 2. Try removing and re-adding your account
 3. Click "Refresh Now" to manually refresh
 
+### How to configure proxy?
+
+The app automatically detects system proxy (environment variables `HTTP_PROXY`/`HTTPS_PROXY` or system proxy settings). To manually specify a proxy, enter the proxy URL (e.g., `http://127.0.0.1:7890`) in Settings > System Settings. Leave empty to use system proxy.
+
 ## Configuration File Location
 
 All configurations (including login tokens) are stored locally. If you need to backup, migrate, or manually clean up, you can find the following configuration files:

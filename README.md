@@ -6,7 +6,7 @@
 > 本应用需要登录 Google 账号并获取 Access Token。Token 仅保存在本地，不会上传到任何服务器。
 > 但请注意：**任何拥有你 Token 的人都可以访问你的 Google Cloud 资源**。请妥善保管你的配置文件。
 
-**一个独立的桌面应用，用于实时监控 Google Antigravity AI 模型配额剩余情况。**
+**Float, 一个用于实时监控 Google Antigravity AI 模型配额剩余情况的独立桌面应用。**
 
 这是 [Antigravity Quota Watcher](https://github.com/wusimpl/AntigravityQuotaWatcher) 插件的桌面版本，不依赖本地 Antigravity 环境，可随时随地查看剩余配额。
 
@@ -124,6 +124,10 @@ xattr -cr /Applications/Float.app
 1. 检查网络连接
 2. 尝试删除账户后重新登录
 3. 点击「立即刷新」手动刷新
+
+### 如何设置代理？
+
+应用会自动检测系统代理（环境变量 `HTTP_PROXY`/`HTTPS_PROXY` 或系统代理设置）。如需手动指定代理，可在设置页面的「系统设置」中填写代理地址（如 `http://127.0.0.1:7890`）。留空则使用系统代理。
 
 ## 配置文件路径
 
