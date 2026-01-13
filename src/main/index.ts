@@ -362,6 +362,13 @@ ipcMain.handle('save-settings', async (_event, data: {
   const prevProxyUrl = prevSettings?.proxyUrl ?? '';
   if (prevProxyEnabled !== (settings.proxyEnabled ?? false) || prevProxyUrl !== (settings.proxyUrl ?? '')) {
     await applyProxySettings();
+    // 代理设置变更后自动刷新模型列表，避免用户需要重启或等待下一次轮询
+    if (authService.isAuthenticated()) {
+      logger.info('[Main] Proxy settings changed, refreshing quota...');
+      quotaService.refreshNow().catch(err => {
+        logger.error('[Main] Failed to refresh quota after proxy change:', err);
+      });
+    }
   }
 
   // 广播设置更新
