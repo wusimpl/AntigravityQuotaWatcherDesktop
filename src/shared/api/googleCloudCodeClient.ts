@@ -77,7 +77,7 @@ export class GoogleCloudCodeClient {
   private static instance: GoogleCloudCodeClient;
   private proxyUrl: string | null = null;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): GoogleCloudCodeClient {
     if (!GoogleCloudCodeClient.instance) {
@@ -279,7 +279,7 @@ export class GoogleCloudCodeClient {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(postData),
           'Authorization': `Bearer ${accessToken}`,
-          'User-Agent': 'Float/1.0',
+          'User-Agent': 'Antigravity/1.11',
         },
       };
 

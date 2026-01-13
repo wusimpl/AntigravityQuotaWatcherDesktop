@@ -45,6 +45,9 @@ const formatResetTimeSimple = (resetTime?: string): string => {
   return `${diffMins}Min`;
 };
 
+// 检测是否为 macOS 平台
+const isMac = window.electronAPI?.getPlatform?.() === 'darwin';
+
 const Widget: React.FC = () => {
   const { t } = useI18nContext();
   // 悬浮窗使用 showWidget: true 覆盖默认值
@@ -277,7 +280,7 @@ const Widget: React.FC = () => {
       return (
         <div className="flex items-center justify-center w-full h-full">
           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping mr-2" />
-          <span className="text-[10px] text-blue-200/70 font-medium tracking-widest uppercase">{t.widget.initializing}</span>
+          <span className={`text-[10px] text-blue-200/70 tracking-widest uppercase ${isMac ? 'font-semibold' : 'font-medium'}`}>{t.widget.initializing}</span>
         </div>
       );
     }
@@ -287,7 +290,7 @@ const Widget: React.FC = () => {
       return (
         <div className="flex items-center justify-center w-full h-full">
           <BotIcon className="w-3.5 h-3.5 text-gray-400 mr-1.5" />
-          <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase">{t.widget.noModelSelected}</span>
+          <span className={`text-[10px] text-gray-400 tracking-wider uppercase ${isMac ? 'font-semibold' : 'font-medium'}`}>{t.widget.noModelSelected}</span>
         </div>
       );
     }
@@ -323,7 +326,7 @@ const Widget: React.FC = () => {
             {(settings.showModelNameInWidget ?? true) && (
               <div className="flex items-center gap-1.5 mb-0.5">
                 <LeftIcon className="w-4 h-4 text-blue-200" />
-                <span className="text-[12px] font-bold tracking-wider text-white/90 font-sans uppercase">
+<span className={`text-[12px] tracking-wider text-white/90 font-sans uppercase ${isMac ? 'font-extrabold' : 'font-bold'}`}>
                   {leftModel.alias || leftModel.displayName}
                 </span>
               </div>
@@ -355,7 +358,7 @@ const Widget: React.FC = () => {
               {(settings.showModelNameInWidget ?? true) && (
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <RightIcon className="w-4 h-4 text-orange-200" />
-                  <span className="text-[12px] font-bold tracking-wider text-white/90 font-sans uppercase">
+<span className={`text-[12px] tracking-wider text-white/90 font-sans uppercase ${isMac ? 'font-extrabold' : 'font-bold'}`}>
                     {rightModel.alias || rightModel.displayName}
                   </span>
                 </div>
@@ -427,7 +430,7 @@ const Widget: React.FC = () => {
 
         {/* Label: Binary Capsule (Bottom) */}
         <div className="absolute -bottom-8 left-0 right-0 text-center opacity-0 pointer-events-none">
-          <span className="text-[9px] font-medium tracking-[0.3em] uppercase text-white/40 text-shadow-sm">
+<span className={`text-[9px] tracking-[0.3em] uppercase text-white/40 text-shadow-sm ${isMac ? 'font-semibold' : 'font-medium'}`}>
             {t.widget.appName}
           </span>
         </div>

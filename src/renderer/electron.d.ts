@@ -72,10 +72,13 @@ interface AppSettings {
   notifications: boolean;
   showWidget: boolean;
   widgetScale: number;
+  waveSpeed: number;
+  waveHeight: number;
   showResetTimeInWidget: boolean;
   showModelNameInWidget: boolean;
   showPercentageInWidget: boolean;
   language: 'auto' | 'zh-CN' | 'en';
+  proxyUrl: string;
 }
 
 declare global {
@@ -149,6 +152,16 @@ declare global {
       getActiveAccount: () => Promise<AccountInfo | null>;
       setActiveAccount: (accountId: string) => Promise<void>;
       getAuthState: () => Promise<AuthStateInfo>;
+
+      // 日志导出
+      exportLogs: () => Promise<{ success: boolean; cancelled?: boolean; filePath?: string }>;
+      getLogPath: () => Promise<string>;
+
+      // 代理相关
+      getSystemProxy: () => Promise<string | null>;
+
+      // 平台信息
+      getPlatform: () => NodeJS.Platform;
     };
   }
 }

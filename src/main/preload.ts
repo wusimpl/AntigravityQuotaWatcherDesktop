@@ -188,6 +188,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // 代理相关
   getSystemProxy: () => ipcRenderer.invoke('get-system-proxy'),
+
+  // 平台信息
+  getPlatform: () => process.platform,
 });
 
 // 类型声明
@@ -269,6 +272,9 @@ declare global {
 
       // 代理相关
       getSystemProxy: () => Promise<string | null>;
+
+      // 平台信息
+      getPlatform: () => NodeJS.Platform;
     };
   }
 }

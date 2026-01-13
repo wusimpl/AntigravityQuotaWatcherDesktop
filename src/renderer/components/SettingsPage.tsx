@@ -916,17 +916,35 @@ const SettingsPage: React.FC = () => {
 
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-sm text-gray-400">{t.settings.proxyUrl}</span>
-                <p className="text-xs text-gray-500 mt-0.5">{t.settings.proxyUrlDesc}</p>
+                <span className="text-sm text-gray-400">{t.settings.proxyEnabled}</span>
+                <p className="text-xs text-gray-500 mt-0.5">{t.settings.proxyEnabledDesc}</p>
               </div>
-              <input
-                type="text"
-                value={settings.proxyUrl || ''}
-                onChange={e => updateSetting('proxyUrl', e.target.value)}
-                placeholder={systemProxy || ''}
-                className="w-48 px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
-              />
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.proxyEnabled || false}
+                  onChange={e => updateSetting('proxyEnabled', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
             </div>
+
+            {settings.proxyEnabled && (
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-sm text-gray-400">{t.settings.proxyUrl}</span>
+                  <p className="text-xs text-gray-500 mt-0.5">{t.settings.proxyUrlDesc}</p>
+                </div>
+                <input
+                  type="text"
+                  value={settings.proxyUrl || ''}
+                  onChange={e => updateSetting('proxyUrl', e.target.value)}
+                  placeholder={systemProxy || ''}
+                  className="w-48 px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <div>

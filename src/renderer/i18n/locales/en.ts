@@ -94,6 +94,8 @@ export const en: Translations = {
     exportLogsFailed: 'Export failed',
 
     // Proxy settings
+    proxyEnabled: 'Enable Proxy',
+    proxyEnabledDesc: 'Use proxy to access Google API',
     proxyUrl: 'Proxy URL',
     proxyUrlDesc: 'Leave empty to use system proxy',
     proxyUrlPlaceholder: 'e.g. http://127.0.0.1:7890',

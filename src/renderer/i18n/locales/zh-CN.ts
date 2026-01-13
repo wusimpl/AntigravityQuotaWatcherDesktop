@@ -92,6 +92,8 @@ export const zhCN = {
     exportLogsFailed: '导出失败',
 
     // 代理设置
+    proxyEnabled: '启用代理',
+    proxyEnabledDesc: '开启后使用代理访问 Google API',
     proxyUrl: '代理地址',
     proxyUrlDesc: '留空则使用系统代理',
     proxyUrlPlaceholder: '如 http://127.0.0.1:7890',

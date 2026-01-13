@@ -43,6 +43,7 @@ export interface AppSettings {
   showModelNameInWidget: boolean; // 在悬浮窗显示模型名称
   showPercentageInWidget: boolean; // 在悬浮窗显示剩余额度百分比
   language: 'auto' | 'zh-CN' | 'en';
+  proxyEnabled: boolean;            // 是否启用代理
   proxyUrl: string;                 // 代理 URL（空字符串表示使用系统代理）
 }
 
@@ -61,6 +62,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showModelNameInWidget: true,
   showPercentageInWidget: true,
   language: 'auto',
+  proxyEnabled: false,
   proxyUrl: '',
 };
 

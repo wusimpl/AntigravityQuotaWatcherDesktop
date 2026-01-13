@@ -357,9 +357,10 @@ ipcMain.handle('save-settings', async (_event, data: {
   }
   updateTrayMenu();
 
-  // 应用代理设置（如果代理 URL 变化）
+  // 应用代理设置（如果代理启用状态或代理 URL 变化）
+  const prevProxyEnabled = prevSettings?.proxyEnabled ?? false;
   const prevProxyUrl = prevSettings?.proxyUrl ?? '';
-  if (prevProxyUrl !== (settings.proxyUrl ?? '')) {
+  if (prevProxyEnabled !== (settings.proxyEnabled ?? false) || prevProxyUrl !== (settings.proxyUrl ?? '')) {
     await applyProxySettings();
   }
 
@@ -489,12 +490,20 @@ function setupQuotaService(): void {
 
 /**
  * 应用代理设置到 API 客户端
+ * 只有当 proxyEnabled 为 true 时才使用代理
  * 如果用户设置了代理 URL 则使用用户设置，否则尝试获取系统代理
  */
 async function applyProxySettings(): Promise<void> {
   const settings = store.get('settings');
-  const userProxyUrl = settings.proxyUrl;
+  
+  // 如果代理未启用，直接设置为 null
+  if (!settings.proxyEnabled) {
+    logger.info('[Main] Proxy disabled');
+    apiClient.setProxyUrl(null);
+    return;
+  }
 
+  const userProxyUrl = settings.proxyUrl;
   let effectiveProxyUrl: string | null = null;
 
   if (userProxyUrl && userProxyUrl.trim()) {
