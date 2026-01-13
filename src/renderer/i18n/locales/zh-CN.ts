@@ -91,6 +91,13 @@ export const zhCN = {
     exportLogsSuccess: '日志已导出',
     exportLogsFailed: '导出失败',
 
+    // 代理设置
+    proxyUrl: '代理地址',
+    proxyUrlDesc: '留空则使用系统代理',
+    proxyUrlPlaceholder: '如 http://127.0.0.1:7890',
+    proxyUrlSystemProxy: '系统代理',
+    proxyUrlNoProxy: '无代理',
+
     // 版本信息
     appTitle: 'AG Quota Watcher Desktop',
     appDesc: '监控 Google Antigravity AI 模型配额',

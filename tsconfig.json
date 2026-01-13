@@ -22,6 +22,6 @@
     },
     "typeRoots": ["./node_modules/@types"]
   },
-  "include": ["src/renderer/**/*", "src/shared/**/*"],
+  "include": ["src/renderer/**/*", "src/shared/**/*", "src/main/preload.ts"],
   "references": [{ "path": "./tsconfig.main.json" }]
 }

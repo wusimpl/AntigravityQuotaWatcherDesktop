@@ -3,6 +3,7 @@
  * 封装与 Google Cloud Code API 的交互
  */
 import * as https from 'https';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import {
   CLOUD_CODE_API_BASE,
   LOAD_CODE_ASSIST_PATH,
@@ -74,6 +75,7 @@ export class GoogleApiError extends Error {
  */
 export class GoogleCloudCodeClient {
   private static instance: GoogleCloudCodeClient;
+  private proxyUrl: string | null = null;
 
   private constructor() {}
 
@@ -82,6 +84,22 @@ export class GoogleCloudCodeClient {
       GoogleCloudCodeClient.instance = new GoogleCloudCodeClient();
     }
     return GoogleCloudCodeClient.instance;
+  }
+
+  /**
+   * 设置代理 URL
+   * @param proxyUrl 代理 URL，如 "http://127.0.0.1:7890"，传 null 或空字符串表示不使用代理
+   */
+  setProxyUrl(proxyUrl: string | null): void {
+    this.proxyUrl = proxyUrl && proxyUrl.trim() ? proxyUrl.trim() : null;
+    debugLog(`[GoogleAPI] Proxy URL set to: ${this.proxyUrl || '(none)'}`);
+  }
+
+  /**
+   * 获取当前代理 URL
+   */
+  getProxyUrl(): string | null {
+    return this.proxyUrl;
   }
 
   /**
@@ -249,6 +267,7 @@ export class GoogleCloudCodeClient {
       debugLog(`[GoogleAPI] doRequest: POST ${url.hostname}${path}`);
       debugLog(`[GoogleAPI] doRequest: Body length: ${postData.length} bytes`);
       debugLog(`[GoogleAPI] doRequest: Token length: ${accessToken.length}`);
+      debugLog(`[GoogleAPI] doRequest: Proxy: ${this.proxyUrl || '(none)'}`);
 
       const options: https.RequestOptions = {
         hostname: url.hostname,
@@ -260,9 +279,19 @@ export class GoogleCloudCodeClient {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(postData),
           'Authorization': `Bearer ${accessToken}`,
-          'User-Agent': 'AntigravityQuotaWatcher/1.0',
+          'User-Agent': 'Float/1.0',
         },
       };
+
+      // 如果设置了代理，使用代理 agent
+      if (this.proxyUrl) {
+        try {
+          options.agent = new HttpsProxyAgent(this.proxyUrl);
+          debugLog(`[GoogleAPI] doRequest: Using proxy agent`);
+        } catch (proxyError) {
+          console.error(`[GoogleAPI] doRequest: Failed to create proxy agent:`, proxyError);
+        }
+      }
 
       const req = https.request(options, (res) => {
         let data = '';

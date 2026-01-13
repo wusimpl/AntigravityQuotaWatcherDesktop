@@ -58,7 +58,7 @@ export function createTray(): Tray {
   const icon = getTrayIcon();
 
   tray = new Tray(icon);
-  tray.setToolTip('AG Quota Watcher Desktop');
+  tray.setToolTip('Float');
 
   // 创建托盘菜单
   updateTrayMenu();

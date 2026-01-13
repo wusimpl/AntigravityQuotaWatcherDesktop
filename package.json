@@ -1,7 +1,7 @@
 {
-  "name": "ag-quota-watcher-desktop",
+  "name": "float",
   "version": "0.9.1",
-  "description": "AG Quota Watcher Desktop - 监控 Google Antigravity AI 模型配额的桌面应用",
+  "description": "Float - 监控 Google Antigravity AI 模型配额的桌面应用",
   "main": "dist/main/main/index.js",
   "author": {
     "name": "wusimpl",
@@ -24,7 +24,8 @@
     "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
-    "electron-store": "^8.1.0"
+    "electron-store": "^8.1.0",
+    "https-proxy-agent": "^7.0.6"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
@@ -45,9 +46,9 @@
     "typescript": "^5.3.3",
     "vite": "^5.0.10"
   },
-  "build": {
-    "appId": "com.agquota.watcher.desktop",
-    "productName": "AG-Quota-Watcher-Desktop",
+"build": {
+    "appId": "com.float.app",
+    "productName": "Float",
     "directories": {
       "output": "dist-electron"
     },
@@ -116,8 +117,8 @@
       "installerHeaderIcon": "resources/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "AG Quota Watcher",
-      "uninstallDisplayName": "AG Quota Watcher Desktop",
+"shortcutName": "Float",
+      "uninstallDisplayName": "Float",
       "include": "installer.nsh"
     }
   }

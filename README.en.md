@@ -1,4 +1,4 @@
-# <img src="./resources/icon.png" width="80" style="vertical-align: middle"> AG Quota Watcher Desktop
+# <img src="./resources/icon.png" width="80" style="vertical-align: middle"> Float
 
 #### Choose Your Language:  [简体中文](./README.md) | English
 
@@ -52,7 +52,7 @@ This is the desktop version of [Antigravity Quota Watcher](https://github.com/wu
 After dragging to your Applications folder, since the app is unsigned, you may see a "Applications is damaged, cannot open" warning on first launch. Run the following command in Terminal before opening:
 
 ```bash
-xattr -cr /Applications/AG-Quota-Watcher-Desktop.app
+xattr -cr /Applications/Float.app
 ```
 
 Installation still has questions? Please refer to [this article](https://sysin.org/blog/macos-if-crashes-when-opening/).
@@ -137,17 +137,17 @@ All configurations (including login tokens) are stored locally. If you need to b
 
 **Windows:**
 ```
-%APPDATA%\AG-Quota-Watcher-Desktop\
+%APPDATA%\Float\
 ```
 
 **macOS:**
 ```
-~/Library/Application Support/AG-Quota-Watcher-Desktop/
+~/Library/Application Support/Float/
 ```
 
 **Linux:**
 ```
-~/.config/AG-Quota-Watcher-Desktop/
+~/.config/Float/
 ```
 
 ## Submitting Issues

@@ -162,6 +162,7 @@ const SettingsPage: React.FC = () => {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'failed'>('idle');
+  const [systemProxy, setSystemProxy] = useState<string>('');
 
   // 从 displayName 提取默认别名（取第一个单词）
   const getDefaultAlias = (displayName: string): string => {
@@ -232,6 +233,12 @@ const SettingsPage: React.FC = () => {
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
+
+  useEffect(() => {
+    window.electronAPI?.getSystemProxy().then(proxy => {
+      if (proxy) setSystemProxy(proxy);
+    });
+  }, []);
 
   // 订阅配额更新：让“重置时间/配额”展示跟随最新快照，避免设置页与悬浮窗显示不一致
   useEffect(() => {
@@ -905,6 +912,20 @@ const SettingsPage: React.FC = () => {
                 <option value="zh-CN">简体中文</option>
                 <option value="en">English</option>
               </select>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm text-gray-400">{t.settings.proxyUrl}</span>
+                <p className="text-xs text-gray-500 mt-0.5">{t.settings.proxyUrlDesc}</p>
+              </div>
+              <input
+                type="text"
+                value={settings.proxyUrl || ''}
+                onChange={e => updateSetting('proxyUrl', e.target.value)}
+                placeholder={systemProxy || ''}
+                className="w-48 px-2 py-1 text-sm bg-gray-700 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+              />
             </div>
 
             <div className="flex items-center justify-between">

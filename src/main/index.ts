@@ -15,11 +15,13 @@ import {
   getSettingsWindow
 } from './window';
 import { createTray, updateTrayMenu } from './tray';
-import { GoogleAuthService, AuthState, LoginFlowState } from './auth';
+import { GoogleAuthService, AuthState } from './auth';
 import { QuotaService } from './quota';
 import { QuotaSnapshot, AppSettings, ModelConfig, SelectedModel, AccountModelConfigs } from '../shared/types';
 import { store } from './store';
 import { logger } from './logger';
+import { getSystemProxy } from './proxyUtils';
+import { GoogleCloudCodeClient } from '../shared/api';
 
 // Initialize logger first
 logger.initialize();
@@ -28,6 +30,7 @@ logger.info('[Main] Application starting, version:', app.getVersion());
 // 服务实例
 const authService = GoogleAuthService.getInstance();
 const quotaService = QuotaService.getInstance({ pollingInterval: 60_000 });
+const apiClient = GoogleCloudCodeClient.getInstance();
 
 const authStateListenerAbortController = new AbortController();
 app.on('before-quit', () => authStateListenerAbortController.abort());
@@ -51,6 +54,9 @@ if (!gotTheLock) {
     // 初始化认证服务
     await authService.initialize();
     logger.info('[Main] Auth service initialized');
+
+    // 应用代理设置
+    await applyProxySettings();
 
     // 创建悬浮窗（但不显示）
     await createWidgetWindow();
@@ -236,7 +242,7 @@ ipcMain.handle('export-logs', async () => {
   const settingsWindow = getSettingsWindow();
   const result = await dialog.showSaveDialog(settingsWindow || BrowserWindow.getFocusedWindow()!, {
     title: 'Export Logs',
-    defaultPath: `ag-quota-watcher-desktop-logs-${new Date().toISOString().split('T')[0]}.txt`,
+    defaultPath: `float-logs-${new Date().toISOString().split('T')[0]}.txt`,
     filters: [
       { name: 'Text Files', extensions: ['txt'] },
       { name: 'Log Files', extensions: ['log'] },
@@ -350,6 +356,12 @@ ipcMain.handle('save-settings', async (_event, data: {
     }
   }
   updateTrayMenu();
+
+  // 应用代理设置（如果代理 URL 变化）
+  const prevProxyUrl = prevSettings?.proxyUrl ?? '';
+  if (prevProxyUrl !== (settings.proxyUrl ?? '')) {
+    await applyProxySettings();
+  }
 
   // 广播设置更新
   const widgetWindow = getWidgetWindow();
@@ -472,3 +484,38 @@ function setupQuotaService(): void {
     }
   });
 }
+
+// ========== 代理设置 ==========
+
+/**
+ * 应用代理设置到 API 客户端
+ * 如果用户设置了代理 URL 则使用用户设置，否则尝试获取系统代理
+ */
+async function applyProxySettings(): Promise<void> {
+  const settings = store.get('settings');
+  const userProxyUrl = settings.proxyUrl;
+
+  let effectiveProxyUrl: string | null = null;
+
+  if (userProxyUrl && userProxyUrl.trim()) {
+    // 用户明确设置了代理
+    effectiveProxyUrl = userProxyUrl.trim();
+    logger.info('[Main] Using user-configured proxy:', effectiveProxyUrl);
+  } else {
+    // 尝试获取系统代理
+    effectiveProxyUrl = await getSystemProxy('https://cloudcode-pa.googleapis.com');
+    if (effectiveProxyUrl) {
+      logger.info('[Main] Using system proxy:', effectiveProxyUrl);
+    } else {
+      logger.info('[Main] No proxy configured');
+    }
+  }
+
+  apiClient.setProxyUrl(effectiveProxyUrl);
+}
+
+// ========== 代理相关 IPC 处理器 ==========
+
+ipcMain.handle('get-system-proxy', async () => {
+  return getSystemProxy('https://cloudcode-pa.googleapis.com');
+});

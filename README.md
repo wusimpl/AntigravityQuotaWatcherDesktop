@@ -1,4 +1,4 @@
-# <img src="./resources/icon.png" width="80" style="vertical-align: middle"> AG Quota Watcher Desktop
+# <img src="./resources/icon.png" width="80" style="vertical-align: middle"> Float
 
 #### Choose Your Language:  简体中文 | [English](./README.en.md)
 
@@ -52,7 +52,7 @@
 拖拽到 Applications 文件夹后，由于应用未签名，首次打开会提示"应用程序已损坏，无法打开"。请在终端执行以下命令后再打开：
 
 ```bash
-xattr -cr /Applications/AG-Quota-Watcher-Desktop.app
+xattr -cr /Applications/Float.app
 ```
 安装仍有疑问？请查看[这篇文章](https://sysin.org/blog/macos-if-crashes-when-opening/)
 
@@ -136,17 +136,17 @@ xattr -cr /Applications/AG-Quota-Watcher-Desktop.app
 
 **Windows:**
 ```
-%APPDATA%\AG-Quota-Watcher-Desktop\
+%APPDATA%\Float\
 ```
 
 **macOS:**
 ```
-~/Library/Application Support/AG-Quota-Watcher-Desktop/
+~/Library/Application Support/Float/
 ```
 
 **Linux:**
 ```
-~/.config/AG-Quota-Watcher-Desktop/
+~/.config/Float/
 ```
 
 ## 提交 Issue

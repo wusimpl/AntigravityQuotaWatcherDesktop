@@ -15,8 +15,8 @@ const zhCN = {
     settings: '设置',
     about: '关于',
     exit: '退出',
-    aboutTitle: '关于 AG Quota Watcher Desktop',
-    aboutMessage: 'AG Quota Watcher Desktop',
+    aboutTitle: '关于 Float',
+    aboutMessage: 'Float',
     aboutDetail: '版本: {version}\n\n监控 Google Antigravity AI 模型配额的桌面应用\n\n作者: @wusimpl',
   },
 };
@@ -30,8 +30,8 @@ const en = {
     settings: 'Settings',
     about: 'About',
     exit: 'Exit',
-    aboutTitle: 'About AG Quota Watcher Desktop',
-    aboutMessage: 'AG Quota Watcher Desktop',
+    aboutTitle: 'About Float',
+    aboutMessage: 'Float',
     aboutDetail: 'Version: {version}\n\nDesktop app for monitoring Google Antigravity AI model quota\n\nAuthor: @wusimpl',
   },
 };

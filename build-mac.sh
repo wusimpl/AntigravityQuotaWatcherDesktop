@@ -1,5 +1,5 @@
 #!/bin/bash
-# AG Quota Watcher Desktop Build Script for macOS
+# Float Build Script for macOS
 # Usage: ./build.sh [--clean] [--skip-install] [--platform <win|mac|all>]
 
 set -e
@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo -e "${CYAN}=== AG Quota Watcher Desktop Build Script ===${NC}"
+echo -e "${CYAN}=== Float Build Script ===${NC}"
 
 # Step 1: Clean
 if [ "$CLEAN" = true ]; then

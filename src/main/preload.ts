@@ -73,7 +73,13 @@ interface AppSettings {
   notifications: boolean;
   showWidget: boolean;
   widgetScale: number;
+  waveSpeed: number;
+  waveHeight: number;
+  showResetTimeInWidget: boolean;
+  showModelNameInWidget: boolean;
+  showPercentageInWidget: boolean;
   language: 'auto' | 'zh-CN' | 'en';
+  proxyUrl: string;
 }
 
 // 暴露给渲染进程的 API
@@ -179,6 +185,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 日志导出
   exportLogs: () => ipcRenderer.invoke('export-logs'),
   getLogPath: () => ipcRenderer.invoke('get-log-path'),
+
+  // 代理相关
+  getSystemProxy: () => ipcRenderer.invoke('get-system-proxy'),
 });
 
 // 类型声明
@@ -257,6 +266,9 @@ declare global {
       // 日志导出
       exportLogs: () => Promise<{ success: boolean; cancelled?: boolean; filePath?: string }>;
       getLogPath: () => Promise<string>;
+
+      // 代理相关
+      getSystemProxy: () => Promise<string | null>;
     };
   }
 }

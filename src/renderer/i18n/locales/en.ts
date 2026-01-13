@@ -93,6 +93,13 @@ export const en: Translations = {
     exportLogsSuccess: 'Logs exported successfully',
     exportLogsFailed: 'Export failed',
 
+    // Proxy settings
+    proxyUrl: 'Proxy URL',
+    proxyUrlDesc: 'Leave empty to use system proxy',
+    proxyUrlPlaceholder: 'e.g. http://127.0.0.1:7890',
+    proxyUrlSystemProxy: 'System Proxy',
+    proxyUrlNoProxy: 'No Proxy',
+
     // Version info
     appTitle: 'AG Quota Watcher Desktop',
     appDesc: 'Monitor Google Antigravity AI model quota',

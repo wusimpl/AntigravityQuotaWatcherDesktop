@@ -1,5 +1,5 @@
 #!/bin/bash
-# AG Quota Watcher Desktop Build Script for Linux
+# Float Build Script for Linux
 # 构建目标: deb, AppImage
 # 用法: ./build-linux.sh [--clean] [--skip-install]
 
@@ -43,7 +43,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-echo -e "${CYAN}=== AG Quota Watcher Desktop 构建脚本 (Linux) ===${NC}"
+echo -e "${CYAN}=== Float 构建脚本 (Linux) ===${NC}"
 
 # 第一步：清理
 if [ "$CLEAN" = true ]; then
