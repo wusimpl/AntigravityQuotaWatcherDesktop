@@ -11,6 +11,11 @@ export interface ModelQuotaInfo {
   remainingPercentage: number; // 剩余百分比 (0-100)
   isExhausted: boolean;      // 是否耗尽
   resetTime: string;         // 重置时间 (ISO 8601)
+  // Kiro Credits 特有字段
+  isKiroCredits?: boolean;   // 是否为 Kiro Credits 类型
+  creditsUsed?: number;      // 已使用的 credits
+  creditsLimit?: number;     // credits 总量
+  creditsRemaining?: number; // 剩余 credits
 }
 
 // 配额快照

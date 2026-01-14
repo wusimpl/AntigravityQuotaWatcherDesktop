@@ -37,9 +37,30 @@ interface QuotaSnapshot {
     remainingPercentage: number;
     isExhausted: boolean;
     resetTime: string;
+    // Kiro Credits 特有字段
+    isKiroCredits?: boolean;
+    creditsUsed?: number;
+    creditsLimit?: number;
+    creditsRemaining?: number;
   }>;
   userEmail?: string;
   tier?: string;
+}
+
+// Kiro 配额快照类型
+interface KiroQuotaSnapshot {
+  timestamp: string;
+  used: number;
+  limit: number;
+  remaining: number;
+  percentage: number;
+}
+
+// Kiro 认证状态类型
+interface KiroAuthState {
+  isAuthenticated: boolean;
+  profileArn?: string;
+  error?: string;
 }
 
 // 模型信息类型
@@ -79,6 +100,7 @@ interface AppSettings {
   showModelNameInWidget: boolean;
   showPercentageInWidget: boolean;
   language: 'auto' | 'zh-CN' | 'en';
+  proxyEnabled: boolean;
   proxyUrl: string;
 }
 
@@ -189,6 +211,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 代理相关
   getSystemProxy: () => ipcRenderer.invoke('get-system-proxy'),
 
+  // Kiro 相关
+  getKiroAuthState: () => ipcRenderer.invoke('get-kiro-auth-state'),
+  getKiroQuota: () => ipcRenderer.invoke('get-kiro-quota'),
+  refreshKiroQuota: () => ipcRenderer.invoke('refresh-kiro-quota'),
+  reloadKiroAuth: () => ipcRenderer.invoke('reload-kiro-auth'),
+  onKiroQuotaUpdate: (callback: (snapshot: KiroQuotaSnapshot) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, snapshot: KiroQuotaSnapshot) => callback(snapshot);
+    ipcRenderer.on('kiro-quota-update', handler);
+    return () => ipcRenderer.removeListener('kiro-quota-update', handler);
+  },
+  onKiroQuotaError: (callback: (error: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, error: string) => callback(error);
+    ipcRenderer.on('kiro-quota-error', handler);
+    return () => ipcRenderer.removeListener('kiro-quota-error', handler);
+  },
+
   // 平台信息
   getPlatform: () => process.platform,
 });
@@ -272,6 +310,14 @@ declare global {
 
       // 代理相关
       getSystemProxy: () => Promise<string | null>;
+
+      // Kiro 相关
+      getKiroAuthState: () => Promise<KiroAuthState>;
+      getKiroQuota: () => Promise<KiroQuotaSnapshot | null>;
+      refreshKiroQuota: () => Promise<KiroQuotaSnapshot | null>;
+      reloadKiroAuth: () => Promise<boolean>;
+      onKiroQuotaUpdate: (callback: (snapshot: KiroQuotaSnapshot) => void) => () => void;
+      onKiroQuotaError: (callback: (error: string) => void) => () => void;
 
       // 平台信息
       getPlatform: () => NodeJS.Platform;

@@ -25,9 +25,9 @@ Write-Host "`n[2/3] Building project..." -ForegroundColor Yellow
 npm run build
 if ($LASTEXITCODE -ne 0) { throw "Build failed" }
 
-# Package (portable only)
-Write-Host "`n[3/3] Packaging Windows portable..." -ForegroundColor Yellow
-npx electron-builder --win portable --config.directories.output=dist-electron/windows
+# Package (unpacked only, skip portable exe to save time)
+Write-Host "`n[3/3] Packaging Windows (unpacked)..." -ForegroundColor Yellow
+npx electron-builder --win dir --config.directories.output=dist-electron/windows
 if ($LASTEXITCODE -ne 0) { throw "Packaging failed" }
 
 # Done

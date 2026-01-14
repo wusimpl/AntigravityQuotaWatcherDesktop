@@ -8,6 +8,15 @@ import type { QuotaSnapshot, AppSettings, ModelConfig, SelectedModel, AccountMod
 import { useI18nContext } from '../i18n/I18nContext';
 import './Widget.css';
 
+// Kiro 配额快照类型
+interface KiroQuotaSnapshot {
+  timestamp: string;
+  used: number;
+  limit: number;
+  remaining: number;
+  percentage: number;
+}
+
 // 用于显示的模型数据（包含配额和配置）
 interface DisplayModel {
   accountId: string;
@@ -16,6 +25,10 @@ interface DisplayModel {
   alias: string;
   remainingPercentage: number;
   resetTime?: string;
+  // Kiro Credits 特有字段
+  isKiroCredits?: boolean;
+  creditsRemaining?: number;
+  creditsLimit?: number;
 }
 
 const MAX_VISIBLE_MODELS = 2;
@@ -55,14 +68,16 @@ const Widget: React.FC = () => {
   const [accountModelConfigs, setAccountModelConfigs] = useState<AccountModelConfigs>({});
   const [selectedModels, setSelectedModels] = useState<SelectedModel[]>([]);
   const [allQuotas, setAllQuotas] = useState<Record<string, QuotaSnapshot>>({});
+  const [kiroQuota, setKiroQuota] = useState<KiroQuotaSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // 加载数据
   const loadData = useCallback(async () => {
     try {
-      const [settingsData, quotas] = await Promise.all([
+      const [settingsData, quotas, kiroQuotaData] = await Promise.all([
         window.electronAPI?.getSettings(),
         window.electronAPI?.getAllQuotas(),
+        window.electronAPI?.getKiroQuota?.(),
       ]);
 
       if (settingsData) {
@@ -72,6 +87,9 @@ const Widget: React.FC = () => {
       }
       if (quotas) {
         setAllQuotas(quotas);
+      }
+      if (kiroQuotaData) {
+        setKiroQuota(kiroQuotaData);
       }
     } catch (err) {
       console.error('Failed to load data:', err);
@@ -94,6 +112,21 @@ const Widget: React.FC = () => {
     };
 
     const unsubscribe = window.electronAPI?.onQuotaUpdate(handleQuotaUpdate);
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, []);
+
+  // 监听 Kiro 配额更新
+  useEffect(() => {
+    const handleKiroQuotaUpdate = (snapshot: KiroQuotaSnapshot) => {
+      setKiroQuota(snapshot);
+    };
+
+    const unsubscribe = window.electronAPI?.onKiroQuotaUpdate?.(handleKiroQuotaUpdate);
 
     return () => {
       if (typeof unsubscribe === 'function') {
@@ -127,7 +160,25 @@ const Widget: React.FC = () => {
   // 获取要显示的模型数据
   const getDisplayModels = (): DisplayModel[] => {
     const models: DisplayModel[] = [];
+
+    // 首先添加选中的普通模型
     for (const selected of selectedModels) {
+      // 检查是否为 Kiro Credits 特殊模型
+      if (selected.modelId === 'kiro-credits' && kiroQuota) {
+        models.push({
+          accountId: 'kiro',
+          modelId: 'kiro-credits',
+          displayName: 'Kiro Credit',
+          alias: 'Kiro Credit',
+          remainingPercentage: kiroQuota.percentage,
+          isKiroCredits: true,
+          creditsRemaining: kiroQuota.remaining,
+          creditsLimit: kiroQuota.limit,
+        });
+        if (models.length >= MAX_VISIBLE_MODELS) break;
+        continue;
+      }
+
       const snapshot = allQuotas[selected.accountId];
       const modelData = snapshot?.models?.find(m => m.modelId === selected.modelId);
       if (!modelData) continue;
@@ -303,6 +354,7 @@ const Widget: React.FC = () => {
     // Helper to determine icon based on model name/id
     const getModelIcon = (id: string, alias?: string) => {
       const key = (id + (alias || '')).toLowerCase();
+      if (key.includes('kiro')) return BotIcon; // Kiro 使用通用图标
       if (key.includes('claude')) return ClaudeIcon;
       if (key.includes('gemini') || key.includes('google')) return GeminiIcon;
       return BotIcon;
@@ -313,6 +365,24 @@ const Widget: React.FC = () => {
 
     const leftColor = getQuotaColor(leftModel.remainingPercentage);
     const rightColor = rightModel ? getQuotaColor(rightModel.remainingPercentage) : null;
+
+    // 渲染配额显示文本（支持 Kiro Credits 格式）
+    const renderQuotaText = (model: DisplayModel, colorClass: string) => {
+      if (model.isKiroCredits && model.creditsRemaining !== undefined) {
+        // Kiro Credits 显示格式: 只显示剩余额度
+        return (
+          <span className={`text-3xl font-bold font-mono tracking-tighter ${colorClass} transition-colors duration-300`}>
+            {model.creditsRemaining}
+          </span>
+        );
+      }
+      // 普通模型显示百分比
+      return (
+        <span className={`text-3xl font-bold font-mono tracking-tighter ${colorClass} transition-colors duration-300`}>
+          {Math.round(model.remainingPercentage)}%
+        </span>
+      );
+    };
 
     return (
       <>
@@ -333,16 +403,20 @@ const Widget: React.FC = () => {
             )}
             {(settings.showPercentageInWidget ?? true) && (
               <div className="relative">
-                <span className={`text-3xl font-bold font-mono tracking-tighter ${leftColor.text} transition-colors duration-300`}>
-                  {Math.round(leftModel.remainingPercentage)}%
-                </span>
+                {renderQuotaText(leftModel, leftColor.text)}
               </div>
             )}
-            {/* Reset Time */}
-            {settings.showResetTimeInWidget && formatResetTimeSimple(leftModel.resetTime) && (
-              <span className="text-xs text-white/60 font-semibold tracking-wide">
-                ↻ {formatResetTimeSimple(leftModel.resetTime)}
-              </span>
+            {/* Reset Time - Kiro Credits 显示固定的 monthly */}
+            {settings.showResetTimeInWidget && (
+              leftModel.isKiroCredits ? (
+                <span className="text-xs text-white/60 font-semibold tracking-wide">
+                  ↻ Monthly
+                </span>
+              ) : formatResetTimeSimple(leftModel.resetTime) ? (
+                <span className="text-xs text-white/60 font-semibold tracking-wide">
+                  ↻ {formatResetTimeSimple(leftModel.resetTime)}
+                </span>
+              ) : null
             )}
           </div>
         </div>
@@ -365,16 +439,20 @@ const Widget: React.FC = () => {
               )}
               {(settings.showPercentageInWidget ?? true) && (
                 <div className="relative">
-                  <span className={`text-3xl font-bold font-mono tracking-tighter ${rightColor.text} transition-colors duration-300`}>
-                    {Math.round(rightModel.remainingPercentage)}%
-                  </span>
+                  {renderQuotaText(rightModel, rightColor.text)}
                 </div>
               )}
-              {/* Reset Time */}
-              {settings.showResetTimeInWidget && formatResetTimeSimple(rightModel.resetTime) && (
-                <span className="text-xs text-white/60 font-semibold tracking-wide">
-                  ↻ {formatResetTimeSimple(rightModel.resetTime)}
-                </span>
+              {/* Reset Time - Kiro Credits 显示固定的 monthly */}
+              {settings.showResetTimeInWidget && (
+                rightModel.isKiroCredits ? (
+                  <span className="text-xs text-white/60 font-semibold tracking-wide">
+                    ↻ Monthly
+                  </span>
+                ) : formatResetTimeSimple(rightModel.resetTime) ? (
+                  <span className="text-xs text-white/60 font-semibold tracking-wide">
+                    ↻ {formatResetTimeSimple(rightModel.resetTime)}
+                  </span>
+                ) : null
               )}
             </div>
           </div>

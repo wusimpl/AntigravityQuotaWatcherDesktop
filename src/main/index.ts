@@ -17,6 +17,7 @@ import {
 import { createTray, updateTrayMenu } from './tray';
 import { GoogleAuthService, AuthState } from './auth';
 import { QuotaService } from './quota';
+import { KiroAuthService, KiroQuotaService, KiroQuotaSnapshot } from './kiro';
 import { QuotaSnapshot, AppSettings, ModelConfig, SelectedModel, AccountModelConfigs } from '../shared/types';
 import { store } from './store';
 import { logger } from './logger';
@@ -31,6 +32,10 @@ logger.info('[Main] Application starting, version:', app.getVersion());
 const authService = GoogleAuthService.getInstance();
 const quotaService = QuotaService.getInstance({ pollingInterval: 60_000 });
 const apiClient = GoogleCloudCodeClient.getInstance();
+
+// Kiro 服务实例
+const kiroAuthService = KiroAuthService.getInstance();
+const kiroQuotaService = KiroQuotaService.getInstance(60_000);
 
 const authStateListenerAbortController = new AbortController();
 app.on('before-quit', () => authStateListenerAbortController.abort());
@@ -50,10 +55,14 @@ if (!gotTheLock) {
 
   app.whenReady().then(async () => {
     logger.info('[Main] App ready, initializing services');
-    
+
     // 初始化认证服务
     await authService.initialize();
     logger.info('[Main] Auth service initialized');
+
+    // 初始化 Kiro 认证服务
+    await kiroAuthService.initialize();
+    logger.info('[Main] Kiro auth service initialized');
 
     // 应用代理设置
     await applyProxySettings();
@@ -76,10 +85,19 @@ if (!gotTheLock) {
     // 设置配额服务回调
     setupQuotaService();
 
+    // 设置 Kiro 配额服务回调
+    setupKiroQuotaService();
+
     // 如果已认证，启动配额轮询
     if (authService.isAuthenticated()) {
       quotaService.startPolling();
       logger.info('[Main] Quota polling started');
+    }
+
+    // 如果 Kiro 已认证，启动 Kiro 配额轮询
+    if (kiroAuthService.isAuthenticated()) {
+      kiroQuotaService.startPolling();
+      logger.info('[Main] Kiro quota polling started');
     }
 
     // 监听认证状态变化
@@ -528,6 +546,8 @@ async function applyProxySettings(): Promise<void> {
   }
 
   apiClient.setProxyUrl(effectiveProxyUrl);
+  // 同时设置 Kiro API 客户端的代理
+  kiroQuotaService.setProxyUrl(effectiveProxyUrl);
 }
 
 // ========== 代理相关 IPC 处理器 ==========
@@ -535,3 +555,57 @@ async function applyProxySettings(): Promise<void> {
 ipcMain.handle('get-system-proxy', async () => {
   return getSystemProxy('https://cloudcode-pa.googleapis.com');
 });
+
+// ========== Kiro 相关 IPC 处理器 ==========
+
+ipcMain.handle('get-kiro-auth-state', () => {
+  return kiroAuthService.getAuthState();
+});
+
+ipcMain.handle('get-kiro-quota', () => {
+  return kiroQuotaService.getCachedQuota();
+});
+
+ipcMain.handle('refresh-kiro-quota', async () => {
+  await kiroQuotaService.refreshNow();
+  return kiroQuotaService.getCachedQuota();
+});
+
+ipcMain.handle('reload-kiro-auth', async () => {
+  const result = await kiroAuthService.reload();
+  if (result && kiroAuthService.isAuthenticated()) {
+    kiroQuotaService.startPolling();
+  }
+  return result;
+});
+
+// ========== Kiro 配额服务设置 ==========
+
+function setupKiroQuotaService(): void {
+  // 配额更新回调 - 发送到所有窗口
+  kiroQuotaService.onQuotaUpdate((snapshot: KiroQuotaSnapshot) => {
+    const widgetWindow = getWidgetWindow();
+    const settingsWindow = getSettingsWindow();
+
+    if (widgetWindow && !widgetWindow.isDestroyed()) {
+      widgetWindow.webContents.send('kiro-quota-update', snapshot);
+    }
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.webContents.send('kiro-quota-update', snapshot);
+    }
+  });
+
+  // 错误回调
+  kiroQuotaService.onError((error: Error) => {
+    logger.error('[Main] Kiro quota error:', error.message);
+    const widgetWindow = getWidgetWindow();
+    const settingsWindow = getSettingsWindow();
+
+    if (widgetWindow && !widgetWindow.isDestroyed()) {
+      widgetWindow.webContents.send('kiro-quota-error', error.message);
+    }
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      settingsWindow.webContents.send('kiro-quota-error', error.message);
+    }
+  });
+}

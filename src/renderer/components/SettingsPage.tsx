@@ -7,6 +7,22 @@ import type { AppSettings, ModelConfig, SelectedModel, AccountModelConfigs, Quot
 import { useI18nContext } from '../i18n/I18nContext';
 import LoginDialog from './LoginDialog';
 
+// Kiro 配额快照类型
+interface KiroQuotaSnapshot {
+  timestamp: string;
+  used: number;
+  limit: number;
+  remaining: number;
+  percentage: number;
+}
+
+// Kiro 认证状态类型
+interface KiroAuthState {
+  isAuthenticated: boolean;
+  profileArn?: string;
+  error?: string;
+}
+
 // 独立的模型行组件，避免输入时父组件重渲染导致失焦
 interface ModelRowProps {
   accountId: string;
@@ -157,6 +173,9 @@ const SettingsPage: React.FC = () => {
   const [accountModelConfigs, setAccountModelConfigs] = useState<AccountModelConfigs>({});
   const [selectedModels, setSelectedModels] = useState<SelectedModel[]>([]);
   const [accountQuotas, setAccountQuotas] = useState<AccountQuotaData[]>([]);
+  // Kiro 相关状态
+  const [kiroAuthState, setKiroAuthState] = useState<KiroAuthState>({ isAuthenticated: false });
+  const [kiroQuota, setKiroQuota] = useState<KiroQuotaSnapshot | null>(null);
   // accounts 数据已整合到 accountQuotas 中，不再需要单独的 state
   const [isLoading, setIsLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -173,10 +192,12 @@ const SettingsPage: React.FC = () => {
   const loadSettings = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [data, accountList, allQuotas] = await Promise.all([
+      const [data, accountList, allQuotas, kiroAuth, kiroQuotaData] = await Promise.all([
         window.electronAPI?.getSettings(),
         window.electronAPI?.getAccounts(),
         window.electronAPI?.getAllQuotas(),
+        window.electronAPI?.getKiroAuthState?.(),
+        window.electronAPI?.getKiroQuota?.(),
       ]);
 
       if (data) {
@@ -184,6 +205,14 @@ const SettingsPage: React.FC = () => {
         setModelConfigs(data.modelConfigs || {});
         setAccountModelConfigs(data.accountModelConfigs || {});
         setSelectedModels(data.selectedModels || []);
+      }
+
+      // 加载 Kiro 状态
+      if (kiroAuth) {
+        setKiroAuthState(kiroAuth);
+      }
+      if (kiroQuotaData) {
+        setKiroQuota(kiroQuotaData);
       }
       // 注：accounts 数据已整合到 accountQuotas 中
 
@@ -272,6 +301,19 @@ const SettingsPage: React.FC = () => {
         return { ...prev, [data.accountId]: nextAccountConfigs };
       });
     });
+
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, []);
+
+  // 监听 Kiro 配额更新
+  useEffect(() => {
+    const handleKiroQuotaUpdate = (snapshot: KiroQuotaSnapshot) => {
+      setKiroQuota(snapshot);
+    };
+
+    const unsubscribe = window.electronAPI?.onKiroQuotaUpdate?.(handleKiroQuotaUpdate);
 
     return () => {
       if (typeof unsubscribe === 'function') unsubscribe();
@@ -806,6 +848,45 @@ const SettingsPage: React.FC = () => {
           >
             {t.settings.refreshModels}
           </button>
+
+          {/* Kiro Credits 模型选择 */}
+          {kiroAuthState.isAuthenticated && kiroQuota && (
+            <div className="mt-4 bg-gray-800/50 rounded-lg overflow-hidden">
+              <div className="px-3 py-2 bg-gray-700/50 border-b border-gray-700 flex items-center gap-3">
+                <span className="w-8"></span>
+                <span className="text-sm text-gray-300 flex-1">Kiro Credits</span>
+                <span className="w-12 text-xs text-gray-500 text-center">{t.settings.remainingQuota}</span>
+                <span className="w-20 text-xs text-gray-500 text-center">{t.settings.resetTime}</span>
+                <span className="w-24 text-xs text-gray-500 text-center">{t.settings.alias}</span>
+              </div>
+              <div className="p-2">
+                <div className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                  isModelSelected('kiro', 'kiro-credits') ? 'bg-blue-900/30 border border-blue-500/30' : 'bg-gray-800'
+                }`}>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isModelSelected('kiro', 'kiro-credits')}
+                      onChange={() => handleToggleSelect('kiro', 'kiro-credits')}
+                      disabled={!isModelSelected('kiro', 'kiro-credits') && !canSelectMore}
+                      className="sr-only peer"
+                    />
+                    <div className={`w-8 h-4 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all ${
+                      !isModelSelected('kiro', 'kiro-credits') && !canSelectMore
+                        ? 'bg-gray-700 cursor-not-allowed after:bg-gray-400'
+                        : 'bg-gray-600 peer-checked:bg-blue-600'
+                    }`}></div>
+                  </label>
+                  <span className="text-sm text-gray-300 flex-1">Kiro Credit</span>
+                  <span className="w-12 text-xs text-center text-gray-400">
+                    {kiroQuota.remaining}/{kiroQuota.limit}
+                  </span>
+                  <span className="w-20 text-xs text-gray-400 text-center">Monthly</span>
+                  <span className="w-24 text-xs text-gray-400 text-center">-</span>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* 显示设置 */}
