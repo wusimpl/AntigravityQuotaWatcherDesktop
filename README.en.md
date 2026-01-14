@@ -128,7 +128,7 @@ Right-click the tray icon and select "Show Widget".
 
 ### How to configure proxy?
 
-The app automatically detects system proxy (environment variables `HTTP_PROXY`/`HTTPS_PROXY` or system proxy settings). To manually specify a proxy, enter the proxy URL (e.g., `http://127.0.0.1:7890`) in Settings > System Settings. Leave empty to use system proxy.
+Turn on the proxy switch, the app will automatically detect system proxy (environment variables `HTTP_PROXY`/`HTTPS_PROXY` or system proxy settings). To manually specify a proxy, enter the proxy URL (e.g., `http://127.0.0.1:7890`) in Settings > System Settings. Leave empty to use system proxy.
 
 ## Configuration File Location
 
