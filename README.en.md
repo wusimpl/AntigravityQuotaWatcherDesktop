@@ -6,7 +6,7 @@
 > This application requires logging in with a Google account and obtaining an Access Token. The token is stored locally only and will not be uploaded to any server.
 > However, please note: **Anyone with your token can access your Google Cloud resources**. Please keep your configuration files safe.
 
-**A standalone desktop application for real-time monitoring of Google Antigravity AI model remaining quota.**
+**A standalone desktop application for real-time monitoring of Google Antigravity AI model quota and Kiro Credits.**
 
 This is the desktop version of [Antigravity Quota Watcher](https://github.com/wusimpl/AntigravityQuotaWatcher) extension. No local Antigravity environment required, check your quota anytime, anywhere.
 
@@ -34,6 +34,15 @@ This is the desktop version of [Antigravity Quota Watcher](https://github.com/wu
 ![Windows](https://img.shields.io/badge/Windows-Supported-brightgreen?logo=microsoftwindows&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-Supported-brightgreen?logo=apple&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-Supported-brightgreen?logo=linux&logoColor=white)
+
+## Features
+
+- ✅ Real-time monitoring of Antigravity AI model quota (e.g., Gemini-3-Pro, etc.)
+- ✅ Kiro Credits display support
+- ✅ Desktop widget showing up to 2 models simultaneously
+- ✅ Multi-account management
+- ✅ Custom model aliases
+- ✅ Adjustable refresh interval and warning thresholds
 
 ## Installation
 
@@ -80,6 +89,14 @@ The widget features a "Twin Energy Capsule" design, showing up to 2 models:
 - Right orange area shows the second model
 - Water level indicates remaining quota percentage
 - Drag to any position, the position will be saved automatically
+
+### Kiro Credits Support
+
+This app supports displaying Kiro Credits:
+
+- Select `Kiro Credits` in the model selection to monitor it
+- Kiro Credits shows remaining credits instead of percentage
+- Reset period is displayed as "monthly"
 
 ### Settings Page
 

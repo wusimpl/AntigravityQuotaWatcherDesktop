@@ -11,6 +11,8 @@ release/
 .idea/
 *.swp
 *.swo
+*~
+*.un~
 
 # OS
 .DS_Store
