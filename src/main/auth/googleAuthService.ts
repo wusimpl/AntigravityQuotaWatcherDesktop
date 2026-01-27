@@ -207,7 +207,10 @@ export class GoogleAuthService {
       // 检查是否已取消
       if (this.loginCancelled) {
         this.loginAbortController?.abort();
-        await callbackPromise.catch(() => undefined);
+        await Promise.race([
+          callbackPromise.catch(() => undefined),
+          new Promise(resolve => setTimeout(resolve, 100))
+        ]);
         throw new Error('Login cancelled by user');
       }
 
