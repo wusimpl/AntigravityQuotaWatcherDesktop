@@ -58,7 +58,7 @@ export class CallbackServer {
       const signal = options?.signal;
       const isAborted = signal?.aborted;
 
-      if (isAborted) {
+      if (signal?.aborted) {
         reject(new Error('OAuth callback aborted'));
         return;
       }
