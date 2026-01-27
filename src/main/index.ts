@@ -38,7 +38,13 @@ const kiroAuthService = KiroAuthService.getInstance();
 const kiroQuotaService = KiroQuotaService.getInstance(60_000);
 
 const authStateListenerAbortController = new AbortController();
-app.on('before-quit', () => authStateListenerAbortController.abort());
+let unsubscribeLoginFlow: (() => void) | null = null;
+
+app.on('before-quit', () => {
+  authStateListenerAbortController.abort();
+  unsubscribeLoginFlow?.();
+  unsubscribeLoginFlow = null;
+});
 
 // 单实例锁
 const gotTheLock = app.requestSingleInstanceLock();
@@ -111,7 +117,7 @@ if (!gotTheLock) {
     }, { signal: authStateListenerAbortController.signal });
 
     // 监听登录流程状态变化，发送到设置窗口
-    authService.onLoginFlowChange((info) => {
+    unsubscribeLoginFlow = authService.onLoginFlowChange((info) => {
       logger.info('[Main] Login flow state:', info.state);
       const settingsWindow = getSettingsWindow();
       if (settingsWindow && !settingsWindow.isDestroyed()) {

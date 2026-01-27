@@ -48,21 +48,49 @@ export class CallbackServer {
     });
   }
 
-  waitForCallback(expectedState: string): Promise<CallbackResult> {
+  waitForCallback(expectedState: string, options?: { signal?: AbortSignal }): Promise<CallbackResult> {
     if (this.port === 0) {
       return Promise.reject(new Error('Server not started'));
     }
 
     return new Promise((resolve, reject) => {
       let isHandled = false;  // 防止重复处理
+      const signal = options?.signal;
+      const isAborted = signal?.aborted;
+
+      if (isAborted) {
+        reject(new Error('OAuth callback aborted'));
+        return;
+      }
+
+      const cleanup = () => {
+        if (signal) {
+          signal.removeEventListener('abort', abortHandler);
+        }
+      };
+
+      const abortHandler = () => {
+        if (isHandled) return;
+        isHandled = true;
+        clearTimeout(timeout);
+        this.requestHandler = null;
+        cleanup();
+        void this.stop();
+        reject(new Error('OAuth callback aborted'));
+      };
 
       const timeout = setTimeout(() => {
         if (isHandled) return;
         isHandled = true;
         this.requestHandler = null;
-        this.stop();
+        cleanup();
+        void this.stop();
         reject(new Error('OAuth callback timeout'));
       }, AUTH_TIMEOUT_MS);
+
+      if (signal) {
+        signal.addEventListener('abort', abortHandler, { once: true });
+      }
 
       // 设置请求处理函数（替换而非追加）
       this.requestHandler = (req, res) => {
@@ -88,11 +116,12 @@ export class CallbackServer {
         isHandled = true;
         clearTimeout(timeout);
         this.requestHandler = null;
+        cleanup();
 
         if (error) {
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
           res.end(this.getErrorHtml(error, errorDescription || 'Unknown error'));
-          this.stop();
+          void this.stop();
           reject(new Error(`OAuth error: ${error} - ${errorDescription}`));
           return;
         }
@@ -100,7 +129,7 @@ export class CallbackServer {
         if (!code) {
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
           res.end(this.getErrorHtml('missing_code', 'No authorization code'));
-          this.stop();
+          void this.stop();
           reject(new Error('No authorization code received'));
           return;
         }
@@ -108,25 +137,51 @@ export class CallbackServer {
         if (state !== expectedState) {
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
           res.end(this.getErrorHtml('invalid_state', 'Invalid state parameter'));
-          this.stop();
+          void this.stop();
           reject(new Error('Invalid state parameter (CSRF protection)'));
           return;
         }
 
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(this.getSuccessHtml());
-        this.stop();
+        void this.stop();
         resolve({ code, state });
       };
     });
   }
 
-  stop(): void {
-    if (this.server) {
-      this.server.close();
-      this.server = null;
+  async stop(): Promise<void> {
+    if (!this.server) {
       this.port = 0;
+      this.requestHandler = null;
+      return;
     }
+
+    const server = this.server;
+    this.server = null;
+    this.port = 0;
+    this.requestHandler = null;
+
+    await new Promise<void>((resolve) => {
+      const onError = (err: Error) => {
+        logger.error('[CallbackServer] Server close error:', err);
+        server.removeListener('error', onError);
+        resolve();
+      };
+
+      server.once('error', onError);
+
+      try {
+        server.close(() => {
+          server.removeListener('error', onError);
+          resolve();
+        });
+      } catch (err) {
+        logger.error('[CallbackServer] Server close threw:', err);
+        server.removeListener('error', onError);
+        resolve();
+      }
+    });
   }
 
   private getSuccessHtml(): string {
