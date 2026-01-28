@@ -58,6 +58,25 @@ const formatResetTimeSimple = (resetTime?: string): string => {
   return `${diffMins}Min`;
 };
 
+// 重置时间的语义化展示（返回展示文本和对应色彩）
+const getResetTimeVisual = (resetTime?: string) => {
+  if (!resetTime) return { display: '', tone: '' };
+  const reset = new Date(resetTime);
+  if (Number.isNaN(reset.getTime())) return { display: '', tone: '' };
+  const now = new Date();
+  const diffMs = reset.getTime() - now.getTime();
+  if (diffMs <= 0) return { display: '', tone: '' };
+
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const display = formatResetTimeSimple(resetTime);
+  if (!display) return { display: '', tone: '' };
+
+  // >24h 偏冷色，更从容；1-24h 暖色提醒；<1h 红色强调
+  if (diffMins >= 24 * 60) return { display, tone: 'text-sky-100' };
+  if (diffMins >= 60) return { display, tone: 'text-amber-100' };
+  return { display, tone: 'text-rose-100' };
+};
+
 // 检测是否为 macOS 平台
 const isMac = window.electronAPI?.getPlatform?.() === 'darwin';
 
@@ -366,6 +385,9 @@ const Widget: React.FC = () => {
     const leftColor = getQuotaColor(leftModel.remainingPercentage);
     const rightColor = rightModel ? getQuotaColor(rightModel.remainingPercentage) : null;
 
+    const leftResetVisual = getResetTimeVisual(leftModel.resetTime);
+    const rightResetVisual = getResetTimeVisual(rightModel?.resetTime);
+
     // 渲染配额显示文本（支持 Kiro Credits 格式）
     const renderQuotaText = (model: DisplayModel, colorClass: string) => {
       if (model.isKiroCredits && model.creditsRemaining !== undefined) {
@@ -392,9 +414,9 @@ const Widget: React.FC = () => {
           <WaterTank percentage={leftModel.remainingPercentage} color="blue" waveSpeed={settings.waveSpeed ?? 5} waveHeight={settings.waveHeight ?? 3} />
 
           {/* 内容层 */}
-          <div className="relative z-10 flex flex-col items-center gap-0.5">
+          <div className="relative z-10 flex flex-col items-center gap-[4px]">
             {(settings.showModelNameInWidget ?? true) && (
-              <div className="flex items-center gap-1.5 mb-0.5">
+              <div className="flex items-center gap-1.5">
                 <LeftIcon className="w-4 h-4 text-blue-200" />
 <span className={`text-[12px] tracking-wider text-white/90 font-sans uppercase ${isMac ? 'font-extrabold' : 'font-bold'}`}>
                   {leftModel.alias || leftModel.displayName}
@@ -409,12 +431,12 @@ const Widget: React.FC = () => {
             {/* Reset Time - Kiro Credits 显示固定的 monthly */}
             {settings.showResetTimeInWidget && (
               leftModel.isKiroCredits ? (
-                <span className="text-xs text-white/60 font-semibold tracking-wide">
+                <span className="mt-[-2px] text-[12px] leading-[1.05] text-white/70 font-semibold tracking-wide px-1.5 py-[1px] rounded-full bg-white/10 border border-white/10 shadow-sm">
                   ↻ Monthly
                 </span>
-              ) : formatResetTimeSimple(leftModel.resetTime) ? (
-                <span className="text-xs text-white/60 font-semibold tracking-wide">
-                  ↻ {formatResetTimeSimple(leftModel.resetTime)}
+              ) : leftResetVisual.display ? (
+                <span className={`mt-[-2px] text-[12px] leading-[1.05] font-semibold tracking-wide px-1.5 py-[1px] rounded-full bg-white/10 border border-white/10 shadow-sm ${leftResetVisual.tone || 'text-white/80'}`}>
+                  ↻ {leftResetVisual.display}
                 </span>
               ) : null
             )}
@@ -428,9 +450,9 @@ const Widget: React.FC = () => {
             <WaterTank percentage={rightModel.remainingPercentage} color="orange" waveSpeed={settings.waveSpeed ?? 5} waveHeight={settings.waveHeight ?? 3} />
 
             {/* 内容层 */}
-            <div className="relative z-10 flex flex-col items-center gap-0.5">
+            <div className="relative z-10 flex flex-col items-center gap-[4px]">
               {(settings.showModelNameInWidget ?? true) && (
-                <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="flex items-center gap-1.5">
                   <RightIcon className="w-4 h-4 text-orange-200" />
 <span className={`text-[12px] tracking-wider text-white/90 font-sans uppercase ${isMac ? 'font-extrabold' : 'font-bold'}`}>
                     {rightModel.alias || rightModel.displayName}
@@ -445,12 +467,12 @@ const Widget: React.FC = () => {
               {/* Reset Time - Kiro Credits 显示固定的 monthly */}
               {settings.showResetTimeInWidget && (
                 rightModel.isKiroCredits ? (
-                  <span className="text-xs text-white/60 font-semibold tracking-wide">
+                  <span className="mt-[-2px] text-[12px] leading-[1.05] text-white/70 font-semibold tracking-wide px-1.5 py-[1px] rounded-full bg-white/10 border border-white/10 shadow-sm">
                     ↻ Monthly
                   </span>
-                ) : formatResetTimeSimple(rightModel.resetTime) ? (
-                  <span className="text-xs text-white/60 font-semibold tracking-wide">
-                    ↻ {formatResetTimeSimple(rightModel.resetTime)}
+                ) : rightResetVisual.display ? (
+                  <span className={`mt-[-2px] text-[12px] leading-[1.05] font-semibold tracking-wide px-1.5 py-[1px] rounded-full bg-white/10 border border-white/10 shadow-sm ${rightResetVisual.tone || 'text-white/80'}`}>
+                    ↻ {rightResetVisual.display}
                   </span>
                 ) : null
               )}
