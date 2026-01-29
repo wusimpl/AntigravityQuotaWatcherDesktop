@@ -283,14 +283,17 @@ const Widget: React.FC = () => {
 
   // [修改] 水箱波浪组件 - 旋转圆形波浪版
   const WaterTank = ({ percentage, color, waveSpeed = 5, waveHeight = 3 }: { percentage: number; color: 'blue' | 'orange'; waveSpeed?: number; waveHeight?: number }) => {
+    // 额度为 0 时，完全不显示波浪，避免波浪起伏造成"还有水"的误导
+    const isEmpty = percentage <= 0;
+
     // 1. 计算水位 (Top)
     // 液位逻辑：0% 为 100% (底部空)，100% 对应 0% (顶部满)
     let topValue = 100 - percentage;
     // 边缘修正：胶囊形状需要额外调整以覆盖所有角落
     if (percentage > 92) {
       topValue -= 15; // 满额时多溢出一点
-    } else if (percentage < 8) {
-      topValue += 8; // 底部留白修正
+    } else if (percentage < 8 && !isEmpty) {
+      topValue += 8; // 底部留白修正（但不适用于完全为空的情况）
     }
 
     // 2. 计算速度
@@ -299,7 +302,7 @@ const Widget: React.FC = () => {
     // speed=10 -> 周期 1.5s (快)
     // speed=1 -> 周期 12s (慢)
     const speed = Math.max(0, Math.min(10, waveSpeed ?? 5));
-    const isStill = speed === 0;
+    const isStill = speed === 0 || isEmpty; // 额度为 0 时也静止
     // 速度映射：1(12s) 到 10(1.5s)
     const durationSec = speed === 0 ? 0 : (13.5 - speed * 1.2);
 
@@ -311,6 +314,11 @@ const Widget: React.FC = () => {
     const waveRadiusValue = 50 - (heightLevel - 1) * 6.25;
     // 波浪圆角：静止时为0%（平面），运动时根据高度级别设置
     const waveRadius = isStill ? '0%' : `${waveRadiusValue}%`;
+
+    // 额度为 0 时不渲染波浪
+    if (isEmpty) {
+      return <div className={`water-tank ${color} still`} />;
+    }
 
     return (
       <div
@@ -535,7 +543,7 @@ const Widget: React.FC = () => {
         <div className={`relative h-[86px] rounded-[44px] p-[1px] transition-all duration-300 ${primaryModels.length > 1 ? 'w-[280px] bg-gradient-to-r from-blue-400/30 via-white/20 to-orange-400/30' : 'w-[150px] bg-gradient-to-r from-blue-400/30 to-blue-400/10'}`}>
 
           {/* 3. Inner Body Background */}
-          <div className={`relative w-full h-full bg-[#0a0a0a]/80 flex items-center overflow-hidden border border-white/5 ${topSecondaryModels.length > 0 && bottomSecondaryModels.length > 0 ? 'rounded-[8px]' : topSecondaryModels.length > 0 ? 'rounded-t-[8px] rounded-b-[43px]' : bottomSecondaryModels.length > 0 ? 'rounded-t-[43px] rounded-b-[8px]' : 'rounded-[43px]'}`}>
+          <div className="relative w-full h-full bg-[#0a0a0a]/80 flex items-center overflow-hidden border border-white/5 rounded-[43px]">
 
             {/* Background Gradients (Subtle internal lighting) */}
             <div className="absolute top-0 left-0 w-3/5 h-full bg-gradient-to-r from-blue-600/10 via-blue-900/5 to-transparent mix-blend-screen" />
@@ -547,7 +555,7 @@ const Widget: React.FC = () => {
             </div>
 
             {/* 4. Top Gloss Reflection (The "Glass" Feel) */}
-            <div className={`absolute top-0 inset-x-0 h-[40%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none ${topSecondaryModels.length > 0 ? 'rounded-t-[8px]' : 'rounded-t-[43px]'}`} />
+            <div className="absolute top-0 inset-x-0 h-[40%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none rounded-t-[43px]" />
 
             {/* 5. Bottom Rim Light */}
             <div className="absolute bottom-0 inset-x-12 h-[1px] bg-gradient-to-r from-transparent via-blue-400/40 to-transparent blur-[1px]" />

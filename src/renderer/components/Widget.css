@@ -103,9 +103,9 @@
 /* 迷你指示条容器 */
 .mini-quota-bar {
   height: 24px;
-  background: rgba(10, 10, 10, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -119,14 +119,10 @@
 
 /* 上方指示条样式 */
 .mini-quota-bar.mini-quota-bar-top {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px 12px 0 0;
 }
 
 /* 下方指示条样式 */
 .mini-quota-bar.mini-quota-bar-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0 0 12px 12px;
 }
 
 .mini-quota-bar::-webkit-scrollbar {
