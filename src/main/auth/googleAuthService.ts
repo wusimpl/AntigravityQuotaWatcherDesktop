@@ -79,6 +79,7 @@ export class GoogleAuthService {
   private currentAuthUrl: string | undefined;
   private loginFlowListeners: Set<(info: LoginFlowInfo) => void> = new Set();
   private loginCancelled = false;
+  private loginAbortController: AbortController | null = null;
 
   private constructor() {
     this.tokenStorage = TokenStorage.getInstance();
@@ -139,6 +140,7 @@ export class GoogleAuthService {
     }
 
     this.loginCancelled = false;
+    this.loginAbortController = new AbortController();
 
     try {
       this.setState(AuthState.AUTHENTICATING);
@@ -169,7 +171,9 @@ export class GoogleAuthService {
       logger.log('[GoogleAuth] Auth URL built, opening browser...');
 
       // 开始等待回调
-      const callbackPromise = this.callbackServer.waitForCallback(state);
+      const callbackPromise = this.callbackServer.waitForCallback(state, {
+        signal: this.loginAbortController.signal,
+      });
 
       // 更新状态为打开浏览器
       this.setLoginFlowState(LoginFlowState.OPENING_BROWSER, authUrl);
@@ -202,6 +206,11 @@ export class GoogleAuthService {
 
       // 检查是否已取消
       if (this.loginCancelled) {
+        this.loginAbortController?.abort();
+        await Promise.race([
+          callbackPromise.catch(() => undefined),
+          new Promise(resolve => setTimeout(resolve, 100))
+        ]);
         throw new Error('Login cancelled by user');
       }
 
@@ -259,9 +268,10 @@ export class GoogleAuthService {
       return false;
     } finally {
       if (this.callbackServer) {
-        this.callbackServer.stop();
+        await this.callbackServer.stop();
         this.callbackServer = null;
       }
+      this.loginAbortController = null;
       this.currentAuthUrl = undefined;
     }
   }
@@ -272,9 +282,11 @@ export class GoogleAuthService {
   cancelLogin(): void {
     logger.log('[GoogleAuth] Login cancelled by user');
     this.loginCancelled = true;
+    this.loginAbortController?.abort();
+    this.loginAbortController = null;
     
     if (this.callbackServer) {
-      this.callbackServer.stop();
+      void this.callbackServer.stop();
       this.callbackServer = null;
     }
     
