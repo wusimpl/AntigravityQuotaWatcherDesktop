@@ -1,6 +1,6 @@
 {
   "name": "float",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "Float - 监控 Google Antigravity AI 模型配额的桌面应用",
   "main": "dist/main/main/index.js",
   "author": {

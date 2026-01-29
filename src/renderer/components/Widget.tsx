@@ -6,6 +6,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DEFAULT_SETTINGS, getQuotaLevel, QuotaLevel } from '../../shared/types';
 import type { QuotaSnapshot, AppSettings, ModelConfig, SelectedModel, AccountModelConfigs } from '../../shared/types';
 import { useI18nContext } from '../i18n/I18nContext';
+import MiniQuotaBar from './MiniQuotaBar';
+import type { DisplayModel } from './MiniQuotaBar';
 import './Widget.css';
 
 // Kiro 配额快照类型
@@ -17,21 +19,8 @@ interface KiroQuotaSnapshot {
   percentage: number;
 }
 
-// 用于显示的模型数据（包含配额和配置）
-interface DisplayModel {
-  accountId: string;
-  modelId: string;
-  displayName: string;
-  alias: string;
-  remainingPercentage: number;
-  resetTime?: string;
-  // Kiro Credits 特有字段
-  isKiroCredits?: boolean;
-  creditsRemaining?: number;
-  creditsLimit?: number;
-}
-
-const MAX_VISIBLE_MODELS = 2;
+const MAX_PRIMARY_MODELS = 2; // 主显示区最多显示 2 个模型
+const MAX_SECONDARY_PER_ROW = 2; // 每行次级模型最多 2 个
 
 // 格式化重置时间为简化格式（只显示最大单位）
 const formatResetTimeSimple = (resetTime?: string): string => {
@@ -176,25 +165,26 @@ const Widget: React.FC = () => {
     };
   }, []);
 
-  // 获取要显示的模型数据
+  // 获取要显示的模型数据（返回所有选中的模型）
   const getDisplayModels = (): DisplayModel[] => {
     const models: DisplayModel[] = [];
 
-    // 首先添加选中的普通模型
+    // 添加所有选中的模型
     for (const selected of selectedModels) {
       // 检查是否为 Kiro Credits 特殊模型
       if (selected.modelId === 'kiro-credits' && kiroQuota) {
+        const kiroConfig = accountModelConfigs['kiro']?.['kiro-credits'];
+        const kiroAlias = kiroConfig?.alias || 'Kiro';
         models.push({
           accountId: 'kiro',
           modelId: 'kiro-credits',
           displayName: 'Kiro Credit',
-          alias: 'Kiro Credit',
+          alias: kiroAlias,
           remainingPercentage: kiroQuota.percentage,
           isKiroCredits: true,
           creditsRemaining: kiroQuota.remaining,
           creditsLimit: kiroQuota.limit,
         });
-        if (models.length >= MAX_VISIBLE_MODELS) break;
         continue;
       }
 
@@ -211,20 +201,47 @@ const Widget: React.FC = () => {
         remainingPercentage: modelData.remainingPercentage,
         resetTime: modelData.resetTime,
       });
-      if (models.length >= MAX_VISIBLE_MODELS) break;
     }
     return models;
   };
 
-  const displayModels = getDisplayModels();
+  const allDisplayModels = getDisplayModels();
+
+  // 分离主显示区模型和次级模型
+  const primaryModels = allDisplayModels.slice(0, MAX_PRIMARY_MODELS);
+  const secondaryModels = allDisplayModels.slice(MAX_PRIMARY_MODELS);
+
+  // 将次级模型分为上方和下方两组，每组最多 2 个
+  const topSecondaryModels = secondaryModels.slice(0, MAX_SECONDARY_PER_ROW);
+  const bottomSecondaryModels = secondaryModels.slice(MAX_SECONDARY_PER_ROW, MAX_SECONDARY_PER_ROW * 2);
+
+  // 处理次级模型点击切换到主显示区
+  const handleSecondaryModelClick = (clickedModel: DisplayModel, clickedIndex: number, position: 'top' | 'bottom') => {
+    // 计算在 selectedModels 中的实际索引
+    const actualIndex = MAX_PRIMARY_MODELS + (position === 'top' ? clickedIndex : MAX_SECONDARY_PER_ROW + clickedIndex);
+    const newSelectedModels = [...selectedModels];
+
+    // 交换位置：将点击的模型移到主显示区第二个位置
+    if (actualIndex < newSelectedModels.length && newSelectedModels.length > 1) {
+      const temp = newSelectedModels[1]; // 主显示区第二个
+      newSelectedModels[1] = newSelectedModels[actualIndex];
+      newSelectedModels[actualIndex] = temp;
+
+      // 通知主进程更新选中模型顺序
+      window.electronAPI?.saveSelectedModels?.(newSelectedModels);
+    }
+  };
 
   // 让 Electron 窗口大小随胶囊和缩放比例自适应，避免 >100% 时被裁切
   useEffect(() => {
     const scale = typeof settings.widgetScale === 'number' && Number.isFinite(settings.widgetScale)
       ? settings.widgetScale
       : 1;
-    const baseWidth = displayModels.length > 1 ? 280 : 150;
-    const baseHeight = 86;
+    const baseWidth = primaryModels.length > 1 ? 280 : 150;
+    // 计算高度：基础高度 + 上方次级模型高度 + 下方次级模型高度
+    const topBarHeight = topSecondaryModels.length > 0 ? 24 : 0;
+    const bottomBarHeight = bottomSecondaryModels.length > 0 ? 24 : 0;
+    const baseHeight = 86 + topBarHeight + bottomBarHeight;
     const safety = 80; // 与 main/window.ts 中的 WIDGET_SAFETY_MARGIN_PX 保持一致
 
     const width = Math.max(1, Math.ceil(baseWidth * scale) + safety);
@@ -234,7 +251,7 @@ const Widget: React.FC = () => {
       window.electronAPI?.setWidgetSize?.({ width, height });
     });
     return () => window.cancelAnimationFrame(rafId);
-  }, [settings.widgetScale, displayModels.length]);
+  }, [settings.widgetScale, primaryModels.length, topSecondaryModels.length, bottomSecondaryModels.length]);
 
   // --- UI Components & Helpers ---
 
@@ -346,7 +363,7 @@ const Widget: React.FC = () => {
 
   const renderContent = () => {
     // Loading State
-    if (isLoading && displayModels.length === 0) {
+    if (isLoading && primaryModels.length === 0) {
       return (
         <div className="flex items-center justify-center w-full h-full">
           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping mr-2" />
@@ -356,7 +373,7 @@ const Widget: React.FC = () => {
     }
 
     // Empty State
-    if (displayModels.length === 0) {
+    if (primaryModels.length === 0) {
       return (
         <div className="flex items-center justify-center w-full h-full">
           <BotIcon className="w-3.5 h-3.5 text-gray-400 mr-1.5" />
@@ -367,8 +384,8 @@ const Widget: React.FC = () => {
 
     // Default Models for Mockup logic
     // We try to detect based on ID/Alias to assign color/icon, or default to Left=Blue, Right=Orange
-    const leftModel = displayModels[0];
-    const rightModel = displayModels.length > 1 ? displayModels[1] : null;
+    const leftModel = primaryModels[0];
+    const rightModel = primaryModels.length > 1 ? primaryModels[1] : null;
 
     // Helper to determine icon based on model name/id
     const getModelIcon = (id: string, alias?: string) => {
@@ -485,8 +502,8 @@ const Widget: React.FC = () => {
 
   return (
     <div className="flex items-center justify-center w-screen h-screen bg-transparent">
-      {/* 
-        The Main Capsule Container 
+      {/*
+        The Main Capsule Container
         Structure:
         1. Outer Glow (Atmosphere)
         2. Border Ring (Metal/Glass edge)
@@ -494,7 +511,7 @@ const Widget: React.FC = () => {
         4. Inner Reflection (Top gloss)
       */}
       <div
-        className="drag-region relative cursor-default"
+        className="drag-region relative cursor-default flex flex-col"
         style={
           (settings.widgetScale ?? 1) === 1
             ? undefined
@@ -504,11 +521,21 @@ const Widget: React.FC = () => {
 
         {/* 1. Global Atmosphere Glow - 已移除，避免透明窗口下出现矩形背景 */}
 
+        {/* Top Mini Quota Bar - 上方次级模型指示条 */}
+        {topSecondaryModels.length > 0 && (
+          <MiniQuotaBar
+            models={topSecondaryModels}
+            settings={settings}
+            onModelClick={(model, index) => handleSecondaryModelClick(model, index, 'top')}
+            position="top"
+          />
+        )}
+
         {/* 2. The Glass Capsule Wrapper */}
-        <div className={`relative h-[86px] rounded-[44px] p-[1px] transition-all duration-300 ${displayModels.length > 1 ? 'w-[280px] bg-gradient-to-r from-blue-400/30 via-white/20 to-orange-400/30' : 'w-[150px] bg-gradient-to-r from-blue-400/30 to-blue-400/10'}`}>
+        <div className={`relative h-[86px] rounded-[44px] p-[1px] transition-all duration-300 ${primaryModels.length > 1 ? 'w-[280px] bg-gradient-to-r from-blue-400/30 via-white/20 to-orange-400/30' : 'w-[150px] bg-gradient-to-r from-blue-400/30 to-blue-400/10'}`}>
 
           {/* 3. Inner Body Background */}
-          <div className="relative w-full h-full bg-[#0a0a0a]/80 rounded-[43px] flex items-center overflow-hidden border border-white/5">
+          <div className={`relative w-full h-full bg-[#0a0a0a]/80 flex items-center overflow-hidden border border-white/5 ${topSecondaryModels.length > 0 && bottomSecondaryModels.length > 0 ? 'rounded-[8px]' : topSecondaryModels.length > 0 ? 'rounded-t-[8px] rounded-b-[43px]' : bottomSecondaryModels.length > 0 ? 'rounded-t-[43px] rounded-b-[8px]' : 'rounded-[43px]'}`}>
 
             {/* Background Gradients (Subtle internal lighting) */}
             <div className="absolute top-0 left-0 w-3/5 h-full bg-gradient-to-r from-blue-600/10 via-blue-900/5 to-transparent mix-blend-screen" />
@@ -520,13 +547,23 @@ const Widget: React.FC = () => {
             </div>
 
             {/* 4. Top Gloss Reflection (The "Glass" Feel) */}
-            <div className="absolute top-0 inset-x-0 h-[40%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none rounded-t-[43px]" />
+            <div className={`absolute top-0 inset-x-0 h-[40%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none ${topSecondaryModels.length > 0 ? 'rounded-t-[8px]' : 'rounded-t-[43px]'}`} />
 
             {/* 5. Bottom Rim Light */}
             <div className="absolute bottom-0 inset-x-12 h-[1px] bg-gradient-to-r from-transparent via-blue-400/40 to-transparent blur-[1px]" />
             <div className="absolute bottom-0 inset-x-12 h-[1px] bg-gradient-to-r from-transparent via-orange-400/40 to-transparent blur-[1px] translate-x-12" />
           </div>
         </div>
+
+        {/* Bottom Mini Quota Bar - 下方次级模型指示条 */}
+        {bottomSecondaryModels.length > 0 && (
+          <MiniQuotaBar
+            models={bottomSecondaryModels}
+            settings={settings}
+            onModelClick={(model, index) => handleSecondaryModelClick(model, index, 'bottom')}
+            position="bottom"
+          />
+        )}
 
         {/* Label: Binary Capsule (Bottom) */}
         <div className="absolute -bottom-8 left-0 right-0 text-center opacity-0 pointer-events-none">

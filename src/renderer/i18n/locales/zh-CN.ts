@@ -25,6 +25,7 @@ export const zhCN = {
     initializing: '初始化中',
     noModelSelected: '未选择模型',
     appName: 'AG Quota Watcher',
+    clickToSwitch: '点击切换到主显示区',
   },
 
   // 设置页面
@@ -64,7 +65,7 @@ export const zhCN = {
 
     // 模型配置
     modelSection: '模型显示开关',
-    selectedCount: '已选 {count}/2 个模型',
+    selectedCount: '已选 {count}/5 个模型',
     noModelData: '暂无模型数据，请先登录账户',
     noModels: '暂无模型数据',
     remainingQuota: '剩余配额',

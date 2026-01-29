@@ -95,3 +95,99 @@
   transform: none !important;
   border-radius: 0% !important;
 }
+
+/* ========================================
+   MiniQuotaBar - 迷你配额指示条样式
+   ======================================== */
+
+/* 迷你指示条容器 */
+.mini-quota-bar {
+  height: 24px;
+  background: rgba(10, 10, 10, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  gap: 16px;
+  overflow-x: auto;
+  /* 隐藏滚动条 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* 上方指示条样式 */
+.mini-quota-bar.mini-quota-bar-top {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px 12px 0 0;
+}
+
+/* 下方指示条样式 */
+.mini-quota-bar.mini-quota-bar-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0 0 12px 12px;
+}
+
+.mini-quota-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* 单个迷你模型项 */
+.mini-quota-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  flex-shrink: 0;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.mini-quota-item:hover {
+  opacity: 0.85;
+  transform: scale(1.02);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mini-quota-item:active {
+  transform: scale(0.98);
+}
+
+/* 进度条容器 */
+.mini-progress-bar {
+  width: 32px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+/* 进度条填充 */
+.mini-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease-out, background-color 0.3s;
+}
+
+/* 百分比/数值文本 */
+.mini-quota-value {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.8);
+  font-variant-numeric: tabular-nums;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* 别名文本 */
+.mini-quota-alias {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  max-width: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

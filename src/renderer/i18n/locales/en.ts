@@ -27,6 +27,7 @@ export const en: Translations = {
     initializing: 'Initializing',
     noModelSelected: 'No Model Selected',
     appName: 'AG Quota Watcher',
+    clickToSwitch: 'Click to switch to main display',
   },
 
   // Settings page
@@ -66,7 +67,7 @@ export const en: Translations = {
 
     // Model configuration
     modelSection: 'Model Display',
-    selectedCount: 'Selected {count}/2 models',
+    selectedCount: 'Selected {count}/5 models',
     noModelData: 'No model data, please login first',
     noModels: 'No model data',
     remainingQuota: 'Remaining',

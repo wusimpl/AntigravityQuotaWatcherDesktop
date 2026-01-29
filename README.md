@@ -6,7 +6,7 @@
 > 本应用需要登录 Google 账号并获取 Access Token。Token 仅保存在本地，不会上传到任何服务器。
 > 但请注意：**任何拥有你 Token 的人都可以访问你的 Google Cloud 资源**。请妥善保管你的配置文件。
 
-**Float, 一个用于实时监控 Google Antigravity AI 模型配额和 Kiro Credits 剩余情况的独立桌面应用。**
+**Float, 一个用于实时监控 Antigravity IDE AI 模型配额和 Kiro IDE Credits 剩余情况的独立桌面应用。**
 
 这是 [Antigravity Quota Watcher](https://github.com/wusimpl/AntigravityQuotaWatcher) 插件的桌面版本，不依赖本地 Antigravity 环境，可随时随地查看剩余配额。
 
@@ -39,7 +39,7 @@
 
 - ✅ 实时监控 Antigravity AI 模型配额（如 Gemini-3-Pro 等）
 - ✅ 支持 Kiro Credits 额度显示
-- ✅ 桌面悬浮窗显示，最多同时监控 2 个模型
+- ✅ 桌面悬浮窗显示，最多同时监控 6 个模型
 - ✅ 多账户管理
 - ✅ 自定义模型别名
 - ✅ 可调节刷新频率和警告阈值
@@ -77,16 +77,15 @@ xattr -cr /Applications/Float.app
 
 1. 启动应用后，点击托盘图标打开设置页面
 2. 点击「添加账户」按钮，登录你的 Google 账号
-3. 登录成功后，选择你想要监控的模型（最多选 2 个显示在悬浮窗）
+3. 登录成功后，选择你想要监控的模型（最多选 6 个显示在悬浮窗）
 4. 勾选「显示悬浮窗」，配额信息就会显示在桌面上
 
 ### 悬浮窗
 
-悬浮窗采用「双生能量胶囊」设计，最多显示 2 个模型的配额：
+悬浮窗最多显示 6 个模型的配额：
 
-- 左侧蓝色区域显示第一个模型
-- 右侧橙色区域显示第二个模型
-- 水位高度表示剩余配额百分比
+- 前 2 个模型采用「能量胶囊」设计，水位高度表示剩余配额百分比
+- 第 3-6 个模型以 Mini Bar 形式紧凑显示在下方
 - 可以拖拽到任意位置，位置会自动保存
 
 ### Kiro Credits 支持

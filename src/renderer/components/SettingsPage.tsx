@@ -146,6 +146,95 @@ const ModelRow: React.FC<ModelRowProps> = React.memo(({
 });
 ModelRow.displayName = 'ModelRow';
 
+// Kiro 模型行组件
+interface KiroModelRowProps {
+  config: ModelConfig;
+  isSelected: boolean;
+  canSelect: boolean;
+  onToggleSelect: () => void;
+  onAliasChange: (alias: string) => void;
+  kiroQuota: KiroQuotaSnapshot;
+  t: ReturnType<typeof useI18nContext>['t'];
+}
+
+const KiroModelRow: React.FC<KiroModelRowProps> = React.memo(({
+  config,
+  isSelected,
+  canSelect,
+  onToggleSelect,
+  onAliasChange,
+  kiroQuota,
+  t,
+}) => {
+  const [localAlias, setLocalAlias] = useState(config.alias);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    setLocalAlias(config.alias);
+  }, [config.alias]);
+
+  const handleAliasChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setLocalAlias(newValue);
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      onAliasChange(newValue);
+    }, 300);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
+  const handleToggle = () => {
+    if (isSelected || canSelect) {
+      onToggleSelect();
+    }
+  };
+
+  return (
+    <div className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+      isSelected ? 'bg-blue-900/30 border border-blue-500/30' : 'bg-gray-800'
+    }`}>
+      <label className="relative inline-flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={handleToggle}
+          disabled={!isSelected && !canSelect}
+          className="sr-only peer"
+        />
+        <div className={`w-8 h-4 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all ${
+          !isSelected && !canSelect
+            ? 'bg-gray-700 cursor-not-allowed after:bg-gray-400'
+            : 'bg-gray-600 peer-checked:bg-blue-600'
+        }`}></div>
+      </label>
+      <span className="text-sm text-gray-300 flex-1">Kiro Credit</span>
+      <span className="w-12 text-xs text-center text-gray-400">
+        {kiroQuota.remaining}/{kiroQuota.limit}
+      </span>
+      <span className="w-20 text-xs text-gray-400 text-center">Monthly</span>
+      <input
+        type="text"
+        value={localAlias}
+        onChange={handleAliasChange}
+        placeholder={t.settings.aliasPlaceholder}
+        className="w-24 px-2 py-1 text-xs bg-gray-700 border border-gray-600 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+      />
+    </div>
+  );
+});
+KiroModelRow.displayName = 'KiroModelRow';
+
 interface AccountInfo {
   id: string;
   email: string;
@@ -250,6 +339,28 @@ const SettingsPage: React.FC = () => {
         }
         if (hasNewConfigs) {
           setAccountModelConfigs(updatedConfigs);
+        }
+      }
+
+      // 为 Kiro 模型生成默认配置
+      if (kiroAuth?.isAuthenticated && kiroQuotaData) {
+        const updatedConfigs = { ...data?.accountModelConfigs || {} };
+        if (!updatedConfigs['kiro']) {
+          updatedConfigs['kiro'] = {};
+        }
+        if (!updatedConfigs['kiro']['kiro-credits']) {
+          updatedConfigs['kiro']['kiro-credits'] = {
+            visible: true,
+            alias: 'Kiro',
+            order: 0,
+          };
+          setAccountModelConfigs(prev => ({
+            ...prev,
+            kiro: {
+              ...prev['kiro'],
+              'kiro-credits': { visible: true, alias: 'Kiro', order: 0 },
+            },
+          }));
         }
       }
     } catch (err) {
@@ -412,11 +523,11 @@ const SettingsPage: React.FC = () => {
       if (isCurrentlySelected) {
         // 取消选中
         newSelected = prev.filter(s => !(s.accountId === accountId && s.modelId === modelId));
-      } else if (prev.length < 2) {
-        // 添加选中（最多2个）
+      } else if (prev.length < 6) {
+        // 添加选中（最多6个：主显示区2个 + 次级指示条4个）
         newSelected = [...prev, { accountId, modelId }];
       } else {
-        // 已经有2个了，不能再添加
+        // 已经有6个了，不能再添加
         return prev;
       }
 
@@ -455,8 +566,8 @@ const SettingsPage: React.FC = () => {
     return selectedModels.some(s => s.accountId === accountId && s.modelId === modelId);
   };
 
-  // 是否还能选择更多模型
-  const canSelectMore = selectedModels.length < 2;
+  // 是否还能选择更多模型（最多6个：主显示区2个 + 次级指示条4个）
+  const canSelectMore = selectedModels.length < 6;
 
   // 添加账户
   const handleAddAccount = () => {
@@ -860,30 +971,15 @@ const SettingsPage: React.FC = () => {
                 <span className="w-24 text-xs text-gray-500 text-center">{t.settings.alias}</span>
               </div>
               <div className="p-2">
-                <div className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  isModelSelected('kiro', 'kiro-credits') ? 'bg-blue-900/30 border border-blue-500/30' : 'bg-gray-800'
-                }`}>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isModelSelected('kiro', 'kiro-credits')}
-                      onChange={() => handleToggleSelect('kiro', 'kiro-credits')}
-                      disabled={!isModelSelected('kiro', 'kiro-credits') && !canSelectMore}
-                      className="sr-only peer"
-                    />
-                    <div className={`w-8 h-4 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all ${
-                      !isModelSelected('kiro', 'kiro-credits') && !canSelectMore
-                        ? 'bg-gray-700 cursor-not-allowed after:bg-gray-400'
-                        : 'bg-gray-600 peer-checked:bg-blue-600'
-                    }`}></div>
-                  </label>
-                  <span className="text-sm text-gray-300 flex-1">Kiro Credit</span>
-                  <span className="w-12 text-xs text-center text-gray-400">
-                    {kiroQuota.remaining}/{kiroQuota.limit}
-                  </span>
-                  <span className="w-20 text-xs text-gray-400 text-center">Monthly</span>
-                  <span className="w-24 text-xs text-gray-400 text-center">-</span>
-                </div>
+                <KiroModelRow
+                  config={getModelConfig('kiro', 'kiro-credits')}
+                  isSelected={isModelSelected('kiro', 'kiro-credits')}
+                  canSelect={canSelectMore}
+                  onToggleSelect={() => handleToggleSelect('kiro', 'kiro-credits')}
+                  onAliasChange={(alias) => handleAliasChange('kiro', 'kiro-credits', alias)}
+                  kiroQuota={kiroQuota}
+                  t={t}
+                />
               </div>
             </div>
           )}

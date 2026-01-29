@@ -39,7 +39,7 @@ This is the desktop version of [Antigravity Quota Watcher](https://github.com/wu
 
 - ✅ Real-time monitoring of Antigravity AI model quota (e.g., Gemini-3-Pro, etc.)
 - ✅ Kiro Credits display support
-- ✅ Desktop widget showing up to 2 models simultaneously
+- ✅ Desktop widget showing up to 6 models simultaneously
 - ✅ Multi-account management
 - ✅ Custom model aliases
 - ✅ Adjustable refresh interval and warning thresholds
@@ -78,16 +78,15 @@ Installation still has questions? Please refer to [this article](https://sysin.o
 
 1. After launching the app, click the tray icon to open settings
 2. Click "Add Account" to log in with your Google account
-3. After successful login, select the models you want to monitor (up to 2 for the widget)
+3. After successful login, select the models you want to monitor (up to 6 for the widget)
 4. Enable "Show Widget" to display quota information on your desktop
 
 ### Widget
 
-The widget features a "Twin Energy Capsule" design, showing up to 2 models:
+The widget displays up to 6 models:
 
-- Left blue area shows the first model
-- Right orange area shows the second model
-- Water level indicates remaining quota percentage
+- The first 2 models are shown as "Energy Capsules", with water level indicating remaining quota percentage
+- Models 3-6 are displayed as compact Mini Bars below
 - Drag to any position, the position will be saved automatically
 
 ### Kiro Credits Support
