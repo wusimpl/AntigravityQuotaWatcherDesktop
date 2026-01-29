@@ -47,6 +47,7 @@ export interface AppSettings {
   showResetTimeInWidget: boolean; // 在悬浮窗显示重置时间
   showModelNameInWidget: boolean; // 在悬浮窗显示模型名称
   showPercentageInWidget: boolean; // 在悬浮窗显示剩余额度百分比
+  miniBarTextColor: 'white' | 'black'; // 迷你指示条文字颜色
   language: 'auto' | 'zh-CN' | 'en';
   proxyEnabled: boolean;            // 是否启用代理
   proxyUrl: string;                 // 代理 URL（空字符串表示使用系统代理）
@@ -66,6 +67,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showResetTimeInWidget: true,
   showModelNameInWidget: true,
   showPercentageInWidget: true,
+  miniBarTextColor: 'white',    // 迷你指示条文字颜色默认白色
   language: 'auto',
   proxyEnabled: false,
   proxyUrl: '',

@@ -59,6 +59,9 @@ const MiniQuotaBar: React.FC<MiniQuotaBarProps> = ({ models, settings, onModelCl
   // 根据位置添加不同的样式类
   const positionClass = position === 'top' ? 'mini-quota-bar-top' : 'mini-quota-bar-bottom';
 
+  // 根据设置决定文字颜色（默认白色，无背景）
+  const useDarkText = settings.miniBarTextColor === 'black';
+
   return (
     <div className={`mini-quota-bar ${positionClass}`}>
       {models.map((model, index) => {
@@ -91,11 +94,17 @@ const MiniQuotaBar: React.FC<MiniQuotaBarProps> = ({ models, settings, onModelCl
               />
             </div>
             {/* 百分比/数值 */}
-            <span className={`mini-quota-value ${isMac ? 'font-semibold' : 'font-medium'}`}>
+            <span
+              className={`mini-quota-value ${isMac ? 'font-semibold' : 'font-medium'}`}
+              style={useDarkText ? { color: 'rgba(0, 0, 0, 0.85)', fontSize: '11px', fontWeight: 600 } : undefined}
+            >
               {displayValue}
             </span>
             {/* 别名 */}
-            <span className={`mini-quota-alias ${isMac ? 'font-semibold' : 'font-medium'}`}>
+            <span
+              className={`mini-quota-alias ${isMac ? 'font-semibold' : 'font-medium'}`}
+              style={useDarkText ? { color: 'rgba(0, 0, 0, 0.6)', fontSize: '10px', fontWeight: 600 } : undefined}
+            >
               {shortAlias}
             </span>
           </div>

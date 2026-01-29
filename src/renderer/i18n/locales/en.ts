@@ -56,6 +56,10 @@ export const en: Translations = {
     showModelNameDesc: 'Display model name in widget',
     showPercentage: 'Show Percentage',
     showPercentageDesc: 'Display remaining quota percentage in widget',
+    miniBarTextColor: 'Mini Bar Text Color',
+    miniBarTextColorDesc: 'Set the text color of secondary model indicator bars',
+    miniBarTextColorWhite: 'White',
+    miniBarTextColorBlack: 'Black',
 
     // Account management
     accountSection: 'Account Management',

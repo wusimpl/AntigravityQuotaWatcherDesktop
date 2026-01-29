@@ -54,6 +54,10 @@ export const zhCN = {
     showModelNameDesc: '在悬浮窗中显示模型名称',
     showPercentage: '显示剩余额度百分比',
     showPercentageDesc: '在悬浮窗中显示剩余额度百分比',
+    miniBarTextColor: '迷你指示条文字颜色',
+    miniBarTextColorDesc: '设置次级模型指示条的文字颜色',
+    miniBarTextColorWhite: '白色',
+    miniBarTextColorBlack: '黑色',
 
     // 账户管理
     accountSection: '账户管理',
