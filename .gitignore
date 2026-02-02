@@ -50,3 +50,6 @@ coverage/
 
 # LLM Documentation
 llmdoc/
+
+# Analysis files
+code_analysis_issues.md
