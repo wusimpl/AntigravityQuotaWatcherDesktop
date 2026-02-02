@@ -52,4 +52,4 @@ coverage/
 llmdoc/
 
 # Analysis files
-code_analysis_issues.md
+CODE_ANALYSIS_ISSUES.md
